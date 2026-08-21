@@ -92,6 +92,14 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+html, body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+}
 body {
   font-family: var(--font-body);
   font-size: 15px;
@@ -99,6 +107,7 @@ body {
   color: var(--text-primary);
   background: var(--bg-base);
   min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
 img { display: block; max-width: 100%; }
@@ -257,6 +266,109 @@ a { color: inherit; }
   }
   .sidebar-scan { position: static; }
 }
+
+/* ============================================================
+   MOBILE / TOUCH SCROLL FIX
+   Keep the page itself as the only main scrolling surface.
+   Sticky headers can interfere with page scrolling on some
+   mobile browsers, so they become normal flow elements.
+   ============================================================ */
+@media (max-width: 700px) {
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-header {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 64px;
+    padding: 10px 12px;
+    gap: 9px;
+  }
+
+  .header-logo-wrap { width: 38px; height: 38px; }
+  .header-school { font-size: 14px; }
+  .header-sub { font-size: 9px; letter-spacing: .8px; }
+  .clock-time { font-size: 15px; letter-spacing: .8px; }
+  .clock-date { font-size: 9px; }
+  .header-status { font-size: 9px; padding: 3px 7px; }
+  .header-status span:last-child { display: none; }
+
+  .main-layout {
+    width: 100%;
+    padding: 14px 10px 40px;
+    gap: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "scan"
+      "stats"
+      "toolbar"
+      "grid";
+  }
+
+  .sidebar-scan {
+    position: static !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .scan-hero { min-height: 150px; padding: 18px; }
+  .history-list { max-height: 220px; }
+
+  .toolbar {
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+  }
+  .search-wrap { min-width: 100%; }
+  .filter-chips { width: 100%; }
+  .filter-chips .chip { flex: 1; text-align: center; }
+  .showing-count { margin-left: 0; width: 100%; }
+  .toolbar-actions { width: 100%; margin-left: 0; }
+  .toolbar-actions .btn { flex: 1; justify-content: center; min-height: 42px; }
+
+  .grid-area {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .print-row { flex-direction: column; align-items: stretch; }
+  .date-input, .print-row .btn { width: 100%; min-height: 42px; }
+
+  .modal-overlay {
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal {
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 auto;
+  }
+  .modal-body { padding: 18px; }
+  .modal-footer { padding: 14px 18px; }
+  .rfid-row { flex-wrap: wrap; }
+  .rfid-row .form-input { min-width: 0; width: 100%; }
+  .rfid-row .btn { width: 100%; justify-content: center; min-height: 42px; }
+
+  .toast-container {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .toast { max-width: none; width: 100%; }
+}
+
 
 /* ============================================================
    STAT CARDS
@@ -922,6 +1034,10 @@ a { color: inherit; }
   .print-p { color:#1a7a4a; font-weight:700; }
   .print-a { color:#888; }
   .print-footer { margin-top:16px; text-align:center; font-size:10px; color:#aaa; border-top:1px solid #ddd; padding-top:10px; }
+}
+
+@media screen and (max-width: 700px) {
+  #print-report { display: none !important; }
 }
 
 /* ============================================================
@@ -1786,76 +1902,150 @@ a { color: inherit; }
   async function doPrint() {
     const dateVal = el.printDate.value;
     if (!dateVal) { toast('Please select a date.', 'error'); return; }
+
+    /*
+       IMPORTANT FOR PHONES:
+       Open the print window immediately while the click still has
+       user activation. Mobile Safari/Chrome may block window.print()
+       if it is called only after an async Supabase request.
+    */
+    let printWin = null;
+    try {
+      printWin = window.open('', '_blank', 'noopener,noreferrer');
+    } catch (e) {}
+
+    if (printWin) {
+      printWin.document.open();
+      printWin.document.write(`<!DOCTYPE html><html><head><title>Attendance Report</title></head><body><p style="font-family:system-ui;padding:24px">Preparing attendance report...</p></body></html>`);
+      printWin.document.close();
+    }
+
+    const originalHTML = el.printBtn.innerHTML;
     el.printBtn.disabled = true;
     el.printBtn.textContent = 'Preparing...';
 
-    const dayStart = `${dateVal}T00:00:00+08:00`;
-    const dayEnd   = `${dateVal}T23:59:59+08:00`;
+    try {
+      const dayStart = `${dateVal}T00:00:00+08:00`;
+      const dayEnd   = `${dateVal}T23:59:59+08:00`;
 
-    const { data, error } = await sb.from('attendance_records')
-      .select('*')
-      .gte('timestamp', dayStart)
-      .lte('timestamp', dayEnd)
-      .order('timestamp', { ascending: true });
+      const { data, error } = await sb.from('attendance_records')
+        .select('*')
+        .gte('timestamp', dayStart)
+        .lte('timestamp', dayEnd)
+        .order('timestamp', { ascending: true });
 
-    el.printBtn.disabled = false;
-    el.printBtn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="6 9 6 2 18 2 18 9"/>
-        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-        <rect x="6" y="14" width="12" height="8"/>
-      </svg> Print PDF`;
+      if (error) throw error;
 
-    if (error) { toast('Failed to load data: ' + error.message, 'error'); return; }
+      // Build attendance map for that day
+      const dayAtt = {};
+      (data || []).forEach(row => {
+        const uid = row.scanned_rfid;
+        const st  = (row.status || '').toLowerCase().trim();
+        if (!dayAtt[uid]) dayAtt[uid] = { inTime: null, outTime: null, status: '' };
+        if (st === 'present' && !dayAtt[uid].inTime) dayAtt[uid].inTime = row.timestamp;
+        if ((st === 'time out' || st === 'timeout') && !dayAtt[uid].outTime) dayAtt[uid].outTime = row.timestamp;
+        if (st !== 'present') dayAtt[uid].status = st;
+      });
 
-    // Build attendance map for that day
-    const dayAtt = {};
-    (data || []).forEach(row => {
-      const uid = row.scanned_rfid;
-      const st  = (row.status || '').toLowerCase().trim();
-      if (!dayAtt[uid]) dayAtt[uid] = { inTime: null, outTime: null, status: '' };
-      if (st === 'present' && !dayAtt[uid].inTime) dayAtt[uid].inTime = row.timestamp;
-      if ((st === 'time out' || st === 'timeout') && !dayAtt[uid].outTime) dayAtt[uid].outTime = row.timestamp;
-      if (st !== 'present') dayAtt[uid].status = st;
-    });
+      const printDate = new Date(dateVal + 'T12:00:00+08:00');
+      const dateLabel = formatDate(printDate);
+      let presentCount = 0, absentCount = 0;
 
-    const printDate = new Date(dateVal + 'T12:00:00+08:00');
-    const dateLabel = formatDate(printDate);
-    let presentCount = 0, absentCount = 0;
+      const rows = state.students.map((s, i) => {
+        const att = dayAtt[s.rfid_uid];
+        const pres = !!att;
+        if (pres) presentCount++; else absentCount++;
+        const statusText = !att ? 'Absent' : (att.outTime ? 'Timed Out' : 'Present');
+        return `<tr>
+          <td>${i + 1}</td>
+          <td>${esc(s.student_id_number)}</td>
+          <td>${esc(s.full_name)}</td>
+          <td>${esc(s.course_section || '--')}</td>
+          <td class="${pres ? 'print-p' : 'print-a'}">${esc(statusText)}</td>
+          <td>${att && att.inTime  ? esc(formatTime(att.inTime))  : '--'}</td>
+          <td>${att && att.outTime ? esc(formatTime(att.outTime)) : '--'}</td>
+        </tr>`;
+      }).join('');
 
-    const rows = state.students.map((s, i) => {
-      const att = dayAtt[s.rfid_uid];
-      const pres = !!att;
-      if (pres) presentCount++; else absentCount++;
-      const statusText = !att ? 'Absent' : (att.outTime ? 'Timed Out' : 'Present');
-      return `<tr>
-        <td>${i + 1}</td>
-        <td>${esc(s.student_id_number)}</td>
-        <td>${esc(s.full_name)}</td>
-        <td>${esc(s.course_section || '--')}</td>
-        <td class="${pres ? 'print-p' : 'print-a'}">${esc(statusText)}</td>
-        <td>${att && att.inTime  ? esc(formatTime(att.inTime))  : '--'}</td>
-        <td>${att && att.outTime ? esc(formatTime(att.outTime)) : '--'}</td>
-      </tr>`;
-    }).join('');
+      const reportHTML = `
+        <div class="print-page">
+          <div class="print-logo-row">
+            <img class="print-logo-img" src="${esc(new URL('global-academy-logo.jpg', document.baseURI).href)}" alt="Logo" onerror="this.style.display='none'">
+            <div>
+              <div class="print-school-name">GLOBAL ACADEMY</div>
+              <div class="print-report-title">Attendance Report</div>
+            </div>
+          </div>
+          <div class="print-meta">
+            <span>${esc(dateLabel)}</span>
+            <span>Generated: ${new Date().toLocaleString('en-US', { timeZone: TIMEZONE })}</span>
+          </div>
+          <div class="print-summary">
+            <div class="print-sum-item"><div class="print-sum-label">Total</div><div class="print-sum-val">${state.students.length}</div></div>
+            <div class="print-sum-item"><div class="print-sum-label">Present</div><div class="print-sum-val print-green">${presentCount}</div></div>
+            <div class="print-sum-item"><div class="print-sum-label">Absent</div><div class="print-sum-val print-red">${absentCount}</div></div>
+            <div class="print-sum-item"><div class="print-sum-label">Rate</div><div class="print-sum-val print-amber">${state.students.length > 0 ? Math.round((presentCount/state.students.length)*100) : 0}%</div></div>
+          </div>
+          <table>
+            <thead><tr><th>No.</th><th>Student ID</th><th>Name</th><th>Course / Section</th><th>Status</th><th>Time In</th><th>Time Out</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="print-footer">Generated by Smart RFID Attendance System</div>
+        </div>`;
 
-    el.printBody.innerHTML = `
-      <div class="print-meta">
-        <span>${esc(dateLabel)}</span>
-        <span>Generated: ${new Date().toLocaleString('en-US', { timeZone: TIMEZONE })}</span>
-      </div>
-      <div class="print-summary">
-        <div class="print-sum-item"><div class="print-sum-label">Total</div><div class="print-sum-val">${state.students.length}</div></div>
-        <div class="print-sum-item"><div class="print-sum-label">Present</div><div class="print-sum-val" style="color:#1a7a4a">${presentCount}</div></div>
-        <div class="print-sum-item"><div class="print-sum-label">Absent</div><div class="print-sum-val" style="color:#b40000">${absentCount}</div></div>
-        <div class="print-sum-item"><div class="print-sum-label">Rate</div><div class="print-sum-val" style="color:#c47a00">${state.students.length > 0 ? Math.round((presentCount/state.students.length)*100) : 0}%</div></div>
-      </div>
-      <table>
-        <thead><tr><th>No.</th><th>Student ID</th><th>Name</th><th>Course / Section</th><th>Status</th><th>Time In</th><th>Time Out</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+      // Keep the existing print report updated too (desktop fallback).
+      el.printBody.innerHTML = reportHTML;
 
-    setTimeout(() => window.print(), 120);
+      const printCSS = `
+        *{box-sizing:border-box}
+        @page{size:A4;margin:12mm}
+        html,body{margin:0;padding:0;background:#fff;color:#000}
+        body{font-family:Georgia,'Times New Roman',serif}
+        .print-page{padding:4mm;max-width:210mm;margin:0 auto}
+        .print-logo-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;border-bottom:2px solid #8e0000;padding-bottom:12px}
+        .print-logo-img{width:60px;height:60px;object-fit:cover;border-radius:50%}
+        .print-school-name{font-size:22px;font-weight:700;color:#8e0000}
+        .print-report-title{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:1px}
+        .print-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;font-size:12px}
+        .print-summary{display:flex;flex-wrap:wrap;gap:24px;margin-bottom:16px}
+        .print-sum-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777}
+        .print-sum-val{font-size:24px;font-weight:700;color:#8e0000}
+        .print-green{color:#1a7a4a}.print-red{color:#b40000}.print-amber{color:#c47a00}
+        table{width:100%;border-collapse:collapse;font-size:11px}
+        thead tr{background:#8e0000;color:#fff}
+        th{padding:8px 10px;text-align:left}
+        td{padding:7px 10px;border-bottom:1px solid #e0e0e0}
+        tr:nth-child(even) td{background:#fdf5f5}
+        .print-p{color:#1a7a4a;font-weight:700}.print-a{color:#888}
+        .print-footer{margin-top:16px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px}
+        @media(max-width:600px){.print-page{padding:0}.print-school-name{font-size:18px}.print-meta{flex-direction:column}.print-summary{gap:14px}table{font-size:8px}th,td{padding:5px 4px}}
+      `;
+
+      if (printWin && !printWin.closed) {
+        printWin.document.open();
+        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Global Academy - Attendance Report</title><style>${printCSS}</style></head><body>${reportHTML}</body></html>`);
+        printWin.document.close();
+
+        const doWindowPrint = () => {
+          try {
+            printWin.focus();
+            printWin.print();
+          } catch (e) {
+            try { window.print(); } catch (_) {}
+          }
+        };
+        setTimeout(doWindowPrint, 250);
+      } else {
+        // Popup blocked: use the current page as a fallback.
+        setTimeout(() => window.print(), 100);
+      }
+    } catch (err) {
+      if (printWin && !printWin.closed) printWin.close();
+      toast('Failed to prepare report: ' + (err.message || err), 'error');
+    } finally {
+      el.printBtn.disabled = false;
+      el.printBtn.innerHTML = originalHTML;
+    }
   }
 
   /* ============================================================
