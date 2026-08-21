@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Academy | Smart RFID Attendance</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
 /* ============================================================
    DESIGN TOKENS & RESET
@@ -1903,26 +1905,9 @@ a { color: inherit; }
     const dateVal = el.printDate.value;
     if (!dateVal) { toast('Please select a date.', 'error'); return; }
 
-    /*
-       IMPORTANT FOR PHONES:
-       Open the print window immediately while the click still has
-       user activation. Mobile Safari/Chrome may block window.print()
-       if it is called only after an async Supabase request.
-    */
-    let printWin = null;
-    try {
-      printWin = window.open('', '_blank', 'noopener,noreferrer');
-    } catch (e) {}
-
-    if (printWin) {
-      printWin.document.open();
-      printWin.document.write(`<!DOCTYPE html><html><head><title>Attendance Report</title></head><body><p style="font-family:system-ui;padding:24px">Preparing attendance report...</p></body></html>`);
-      printWin.document.close();
-    }
-
     const originalHTML = el.printBtn.innerHTML;
     el.printBtn.disabled = true;
-    el.printBtn.textContent = 'Preparing...';
+    el.printBtn.textContent = 'Creating PDF...';
 
     try {
       const dayStart = `${dateVal}T00:00:00+08:00`;
@@ -1936,112 +1921,104 @@ a { color: inherit; }
 
       if (error) throw error;
 
-      // Build attendance map for that day
       const dayAtt = {};
       (data || []).forEach(row => {
         const uid = row.scanned_rfid;
-        const st  = (row.status || '').toLowerCase().trim();
-        if (!dayAtt[uid]) dayAtt[uid] = { inTime: null, outTime: null, status: '' };
+        const st = (row.status || '').toLowerCase().trim();
+        if (!dayAtt[uid]) dayAtt[uid] = { inTime:null, outTime:null };
         if (st === 'present' && !dayAtt[uid].inTime) dayAtt[uid].inTime = row.timestamp;
         if ((st === 'time out' || st === 'timeout') && !dayAtt[uid].outTime) dayAtt[uid].outTime = row.timestamp;
-        if (st !== 'present') dayAtt[uid].status = st;
       });
 
+      let presentCount = 0, absentCount = 0;
+      const tableRows = state.students.map((s, i) => {
+        const att = dayAtt[s.rfid_uid];
+        const present = !!att;
+        if (present) presentCount++; else absentCount++;
+        return [
+          String(i + 1),
+          String(s.student_id_number || '--'),
+          String(s.full_name || '--'),
+          String(s.course_section || '--'),
+          !att ? 'Absent' : (att.outTime ? 'Timed Out' : 'Present'),
+          att && att.inTime ? formatTime(att.inTime) : '--',
+          att && att.outTime ? formatTime(att.outTime) : '--'
+        ];
+      });
+
+      // Generate the PDF directly. This avoids window.print(), which is
+      // unreliable when called after an asynchronous Supabase request on phones.
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error('PDF library did not load. Check your internet connection and reload the page.');
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
       const printDate = new Date(dateVal + 'T12:00:00+08:00');
       const dateLabel = formatDate(printDate);
-      let presentCount = 0, absentCount = 0;
 
-      const rows = state.students.map((s, i) => {
-        const att = dayAtt[s.rfid_uid];
-        const pres = !!att;
-        if (pres) presentCount++; else absentCount++;
-        const statusText = !att ? 'Absent' : (att.outTime ? 'Timed Out' : 'Present');
-        return `<tr>
-          <td>${i + 1}</td>
-          <td>${esc(s.student_id_number)}</td>
-          <td>${esc(s.full_name)}</td>
-          <td>${esc(s.course_section || '--')}</td>
-          <td class="${pres ? 'print-p' : 'print-a'}">${esc(statusText)}</td>
-          <td>${att && att.inTime  ? esc(formatTime(att.inTime))  : '--'}</td>
-          <td>${att && att.outTime ? esc(formatTime(att.outTime)) : '--'}</td>
-        </tr>`;
-      }).join('');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(142, 0, 0);
+      doc.text('GLOBAL ACADEMY', 14, 16);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text('SMART RFID ATTENDANCE REPORT', 14, 22);
+      doc.text(dateLabel, 14, 28);
 
-      const reportHTML = `
-        <div class="print-page">
-          <div class="print-logo-row">
-            <img class="print-logo-img" src="${esc(new URL('global-academy-logo.jpg', document.baseURI).href)}" alt="Logo" onerror="this.style.display='none'">
-            <div>
-              <div class="print-school-name">GLOBAL ACADEMY</div>
-              <div class="print-report-title">Attendance Report</div>
-            </div>
-          </div>
-          <div class="print-meta">
-            <span>${esc(dateLabel)}</span>
-            <span>Generated: ${new Date().toLocaleString('en-US', { timeZone: TIMEZONE })}</span>
-          </div>
-          <div class="print-summary">
-            <div class="print-sum-item"><div class="print-sum-label">Total</div><div class="print-sum-val">${state.students.length}</div></div>
-            <div class="print-sum-item"><div class="print-sum-label">Present</div><div class="print-sum-val print-green">${presentCount}</div></div>
-            <div class="print-sum-item"><div class="print-sum-label">Absent</div><div class="print-sum-val print-red">${absentCount}</div></div>
-            <div class="print-sum-item"><div class="print-sum-label">Rate</div><div class="print-sum-val print-amber">${state.students.length > 0 ? Math.round((presentCount/state.students.length)*100) : 0}%</div></div>
-          </div>
-          <table>
-            <thead><tr><th>No.</th><th>Student ID</th><th>Name</th><th>Course / Section</th><th>Status</th><th>Time In</th><th>Time Out</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-          <div class="print-footer">Generated by Smart RFID Attendance System</div>
-        </div>`;
+      doc.setFontSize(9);
+      doc.text(`Total: ${state.students.length}    Present: ${presentCount}    Absent: ${absentCount}    Rate: ${state.students.length ? Math.round((presentCount/state.students.length)*100) : 0}%`, 14, 35);
 
-      // Keep the existing print report updated too (desktop fallback).
-      el.printBody.innerHTML = reportHTML;
-
-      const printCSS = `
-        *{box-sizing:border-box}
-        @page{size:A4;margin:12mm}
-        html,body{margin:0;padding:0;background:#fff;color:#000}
-        body{font-family:Georgia,'Times New Roman',serif}
-        .print-page{padding:4mm;max-width:210mm;margin:0 auto}
-        .print-logo-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;border-bottom:2px solid #8e0000;padding-bottom:12px}
-        .print-logo-img{width:60px;height:60px;object-fit:cover;border-radius:50%}
-        .print-school-name{font-size:22px;font-weight:700;color:#8e0000}
-        .print-report-title{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:1px}
-        .print-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;font-size:12px}
-        .print-summary{display:flex;flex-wrap:wrap;gap:24px;margin-bottom:16px}
-        .print-sum-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777}
-        .print-sum-val{font-size:24px;font-weight:700;color:#8e0000}
-        .print-green{color:#1a7a4a}.print-red{color:#b40000}.print-amber{color:#c47a00}
-        table{width:100%;border-collapse:collapse;font-size:11px}
-        thead tr{background:#8e0000;color:#fff}
-        th{padding:8px 10px;text-align:left}
-        td{padding:7px 10px;border-bottom:1px solid #e0e0e0}
-        tr:nth-child(even) td{background:#fdf5f5}
-        .print-p{color:#1a7a4a;font-weight:700}.print-a{color:#888}
-        .print-footer{margin-top:16px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px}
-        @media(max-width:600px){.print-page{padding:0}.print-school-name{font-size:18px}.print-meta{flex-direction:column}.print-summary{gap:14px}table{font-size:8px}th,td{padding:5px 4px}}
-      `;
-
-      if (printWin && !printWin.closed) {
-        printWin.document.open();
-        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Global Academy - Attendance Report</title><style>${printCSS}</style></head><body>${reportHTML}</body></html>`);
-        printWin.document.close();
-
-        const doWindowPrint = () => {
-          try {
-            printWin.focus();
-            printWin.print();
-          } catch (e) {
-            try { window.print(); } catch (_) {}
+      doc.autoTable({
+        startY: 40,
+        head: [['No.', 'Student ID', 'Name', 'Course / Section', 'Status', 'Time In', 'Time Out']],
+        body: tableRows,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2.2, textColor: [30,30,30] },
+        headStyles: { fillColor: [142,0,0], textColor: [255,255,255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [253,245,245] },
+        columnStyles: { 0:{cellWidth:10}, 1:{cellWidth:28}, 2:{cellWidth:58}, 3:{cellWidth:45}, 4:{cellWidth:25}, 5:{cellWidth:25}, 6:{cellWidth:25} },
+        didParseCell: function(cell) {
+          if (cell.section === 'body' && cell.column.index === 4) {
+            if (cell.cell.raw === 'Present') cell.cell.styles.textColor = [26,122,74];
+            if (cell.cell.raw === 'Absent') cell.cell.styles.textColor = [130,130,130];
+            if (cell.cell.raw === 'Timed Out') cell.cell.styles.textColor = [196,122,0];
           }
-        };
-        setTimeout(doWindowPrint, 250);
-      } else {
-        // Popup blocked: use the current page as a fallback.
-        setTimeout(() => window.print(), 100);
+        }
+      });
+
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let page = 1; page <= pageCount; page++) {
+        doc.setPage(page);
+        doc.setFontSize(7);
+        doc.setTextColor(130,130,130);
+        doc.text('Generated by Smart RFID Attendance System', 14, 202);
+        doc.text(`Page ${page} of ${pageCount}`, 283, 202, { align:'right' });
       }
+
+      // Open the generated PDF in a new tab when possible. If the phone blocks
+      // the tab, automatically download the PDF instead.
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const opened = window.open(url, '_blank');
+
+      if (!opened) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Global_Academy_Attendance_${dateVal}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast('PDF created. Open the downloaded PDF to print.', 'success');
+      } else {
+        toast('PDF opened. Use your phone\'s Share/Print option.', 'success');
+      }
+
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
-      if (printWin && !printWin.closed) printWin.close();
-      toast('Failed to prepare report: ' + (err.message || err), 'error');
+      console.error(err);
+      toast('Failed to create PDF: ' + (err.message || err), 'error');
     } finally {
       el.printBtn.disabled = false;
       el.printBtn.innerHTML = originalHTML;
