@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -11,3801 +12,5062 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
+
+/* ============================================================
+   DESIGN
+   ============================================================ */
+
+:root {
+
+  --maroon-deep:#5a0000;
+  --maroon:#8e0000;
+  --maroon-mid:#b40000;
+  --maroon-light:#c62828;
+
+  --gold:#e6b500;
+  --gold-light:#f5cc30;
+  --gold-pale:#fff8dc;
+
+  --bg-base:#f5f3ef;
+  --bg-surface:#fff;
+  --bg-raised:#faf9f7;
+  --bg-subtle:#f0ede8;
+
+  --text-primary:#1a1210;
+  --text-secondary:#5c4f4a;
+  --text-muted:#9e8e88;
+
+  --border:#e2dad4;
+
+  --green:#1a7a4a;
+  --green-bg:#eaf7f1;
+  --green-border:#a3d9be;
+
+  --red:#b40000;
+  --red-bg:#fdeaea;
+  --red-border:#f5b8b8;
+
+  --amber:#c47a00;
+
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:16px;
+  --radius-xl:24px;
+  --radius-full:9999px;
+
+  --font-display:Georgia,"Times New Roman",serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"Courier New",monospace;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 12px rgba(0,0,0,.10);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.14);
+
+  --header-h:70px;
 }
 
-:root{
-    --maroon:#711f25;
-    --maroon-dark:#4b1217;
-    --maroon-light:#8d3037;
-    --gold:#d5a23a;
-    --gold-light:#f1d27a;
-    --cream:#fffaf0;
-    --white:#ffffff;
-    --gray:#6b7280;
-    --light:#f6f6f6;
-    --border:#e5e7eb;
-    --green:#15803d;
-    --red:#dc2626;
-    --blue:#2563eb;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
 body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f5f5f5;
-    color:#292929;
+  font-family:var(--font-body);
+  color:var(--text-primary);
+  background:var(--bg-base);
+  min-height:100vh;
 }
 
-/* =========================
+button,
+input{
+  font-family:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+/* ============================================================
    LOGIN
-========================= */
+   ============================================================ */
 
 .login-screen{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:
-        linear-gradient(
-            rgba(75,18,23,.95),
-            rgba(113,31,37,.95)
-        );
-    padding:20px;
+
+  position:fixed;
+  inset:0;
+
+  background:
+    radial-gradient(circle at top right,rgba(230,181,0,.15),transparent 35%),
+    linear-gradient(135deg,#3d0000,#8e0000,#5a0000);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  z-index:10000;
 }
 
 .login-box{
-    width:100%;
-    max-width:420px;
-    background:white;
-    border-radius:18px;
-    padding:35px;
-    box-shadow:0 20px 60px rgba(0,0,0,.25);
+
+  width:100%;
+  max-width:420px;
+
+  background:#fff;
+
+  border-radius:24px;
+
+  padding:34px;
+
+  box-shadow:0 25px 60px rgba(0,0,0,.35);
+
+  animation:loginIn .35s ease;
+}
+
+@keyframes loginIn{
+
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+
 }
 
 .login-logo{
-    width:80px;
-    height:80px;
-    margin:0 auto 15px;
-    border-radius:50%;
-    background:var(--maroon);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--gold);
-    font-weight:bold;
-    font-size:25px;
-    border:4px solid var(--gold);
+
+  width:80px;
+  height:80px;
+
+  border-radius:50%;
+
+  object-fit:cover;
+
+  display:block;
+
+  margin:0 auto 18px;
+
+  border:3px solid var(--gold);
+
 }
 
-.login-box h1{
-    text-align:center;
-    color:var(--maroon);
-    font-size:25px;
+.login-fallback{
+
+  width:80px;
+  height:80px;
+
+  margin:0 auto 18px;
+
+  border-radius:50%;
+
+  background:var(--maroon);
+
+  color:var(--gold);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-family:var(--font-display);
+
+  font-size:24px;
+  font-weight:bold;
+
+  border:3px solid var(--gold);
 }
 
-.login-box p{
-    text-align:center;
-    color:var(--gray);
-    margin:7px 0 25px;
+.login-title{
+
+  text-align:center;
+
+  font-family:var(--font-display);
+
+  font-size:25px;
+
+  color:var(--maroon);
+
+  margin-bottom:4px;
 }
 
-.input-group{
-    margin-bottom:16px;
+.login-subtitle{
+
+  text-align:center;
+
+  color:var(--text-muted);
+
+  font-size:12px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  margin-bottom:28px;
 }
 
-.input-group label{
-    display:block;
-    font-size:13px;
-    font-weight:bold;
-    margin-bottom:7px;
+.login-field{
+
+  margin-bottom:15px;
 }
 
-.input-group input{
-    width:100%;
-    padding:13px;
-    border:1px solid var(--border);
-    border-radius:9px;
-    outline:none;
-    font-size:14px;
+.login-label{
+
+  display:block;
+
+  font-size:12px;
+
+  font-weight:700;
+
+  text-transform:uppercase;
+
+  color:var(--text-secondary);
+
+  margin-bottom:6px;
 }
 
-.input-group input:focus{
-    border-color:var(--gold);
+.login-input{
+
+  width:100%;
+
+  padding:12px 14px;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:#faf9f7;
+
+  color:var(--text-primary);
+
+  outline:none;
+
+}
+
+.login-input:focus{
+
+  border-color:var(--maroon);
+
+  box-shadow:0 0 0 3px rgba(142,0,0,.10);
+
 }
 
 .login-btn{
-    width:100%;
-    padding:13px;
-    border:none;
-    border-radius:9px;
-    background:var(--maroon);
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-    font-size:15px;
+
+  width:100%;
+
+  padding:13px;
+
+  border-radius:10px;
+
+  background:linear-gradient(135deg,var(--maroon),var(--maroon-mid));
+
+  color:white;
+
+  font-weight:700;
+
+  border:none;
+
+  margin-top:5px;
+
 }
 
 .login-btn:hover{
-    background:var(--maroon-dark);
+
+  transform:translateY(-1px);
+
+  box-shadow:0 5px 15px rgba(142,0,0,.3);
+
 }
 
 .login-error{
-    margin-top:12px;
-    color:var(--red);
-    font-size:13px;
-    text-align:center;
+
+  display:none;
+
+  margin-top:14px;
+
+  padding:10px;
+
+  border-radius:8px;
+
+  background:var(--red-bg);
+
+  color:var(--red);
+
+  font-size:13px;
+
+  text-align:center;
 }
 
-/* =========================
-   APP
-========================= */
+.login-error.show{
+  display:block;
+}
+
+.login-loading{
+
+  display:none;
+
+  text-align:center;
+
+  font-size:12px;
+
+  color:var(--text-muted);
+
+  margin-top:12px;
+}
+
+/* ============================================================
+   APP HEADER
+   ============================================================ */
 
 #app{
-    display:none;
-    min-height:100vh;
+  display:none;
 }
 
-.header{
-    background:var(--maroon);
-    color:white;
-    padding:16px 25px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    box-shadow:0 3px 10px rgba(0,0,0,.15);
-}
+.app-header{
 
-.header-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
+  height:70px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--maroon-deep),
+      var(--maroon),
+      var(--maroon-mid)
+    );
+
+  border-bottom:3px solid var(--gold);
+
+  display:flex;
+  align-items:center;
+
+  gap:15px;
+
+  padding:0 24px;
+
+  color:white;
+
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+
+  position:sticky;
+  top:0;
+  z-index:100;
 }
 
 .header-logo-wrap{
-    width:48px;
-    height:48px;
-    border-radius:50%;
-    border:2px solid var(--gold);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    overflow:hidden;
-    background:white;
+
+  width:44px;
+  height:44px;
+
+  border-radius:50%;
+
+  overflow:hidden;
+
+  border:2px solid var(--gold);
+
+  flex-shrink:0;
 }
 
 .header-logo-wrap img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
 }
 
-.header-logo-text{
-    width:100%;
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--maroon);
-    font-weight:bold;
-    font-size:13px;
+.header-titles{
+  flex:1;
 }
 
-.header h2{
-    font-size:19px;
+.header-school{
+
+  font-family:var(--font-display);
+
+  font-size:17px;
+
+  font-weight:bold;
 }
 
-.header small{
-    display:block;
-    color:var(--gold-light);
-    margin-top:2px;
+.header-sub{
+
+  font-size:10px;
+
+  color:var(--gold);
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
 }
 
-.header-right{
-    display:flex;
-    align-items:center;
-    gap:10px;
+.header-clock{
+
+  text-align:right;
 }
+
+.clock-time{
+
+  font-family:var(--font-mono);
+
+  font-weight:bold;
+
+  color:var(--gold);
+
+  font-size:18px;
+}
+
+.clock-date{
+
+  font-size:10px;
+
+  color:rgba(255,255,255,.7);
+}
+
+.header-status{
+
+  display:flex;
+  align-items:center;
+
+  gap:6px;
+
+  padding:5px 10px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.12);
+
+  color:var(--gold);
+
+  font-size:10px;
+
+  font-weight:bold;
+
+  text-transform:uppercase;
+}
+
+.status-dot{
+
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:var(--gold);
+}
+
+.status-dot.live{
+  background:#4ade80;
+}
+
+.status-dot.error{
+  background:#ff6b6b;
+}
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
 
 .logout-btn{
-    border:1px solid rgba(255,255,255,.4);
-    background:transparent;
-    color:white;
-    padding:8px 13px;
-    border-radius:7px;
-    cursor:pointer;
+
+  padding:7px 12px;
+
+  border-radius:8px;
+
+  border:1px solid rgba(255,255,255,.25);
+
+  color:white;
+
+  font-size:12px;
+
+  background:rgba(255,255,255,.08);
 }
 
 .logout-btn:hover{
-    background:rgba(255,255,255,.1);
+
+  background:rgba(255,255,255,.18);
+
 }
 
-/* =========================
-   CONTAINER
-========================= */
+/* ============================================================
+   MAIN
+   ============================================================ */
 
-.container{
-    max-width:1450px;
-    margin:auto;
-    padding:25px;
+.main-layout{
+
+  max-width:1400px;
+
+  margin:auto;
+
+  padding:24px 20px 50px;
+
+  display:grid;
+
+  grid-template-columns:1fr 340px;
+
+  gap:20px;
+
+  grid-template-areas:
+
+    "stats scan"
+
+    "toolbar scan"
+
+    "grid scan";
+
 }
 
-/* =========================
-   STATS
-========================= */
+.stats-row{
 
-.stats{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:15px;
-    margin-bottom:20px;
+  grid-area:stats;
+
+  display:grid;
+
+  grid-template-columns:repeat(4,1fr);
+
+  gap:14px;
 }
 
-.stat{
-    background:white;
-    border-radius:13px;
-    padding:20px;
-    border:1px solid var(--border);
+.stat-card{
+
+  background:var(--bg-surface);
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  padding:20px;
+
+  box-shadow:var(--shadow-sm);
+
 }
 
-.stat-title{
-    color:var(--gray);
-    font-size:13px;
-    margin-bottom:8px;
+.stat-label{
+
+  font-size:10px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  color:var(--text-muted);
+
+  font-weight:bold;
+
 }
 
 .stat-value{
-    font-size:28px;
-    font-weight:bold;
-    color:var(--maroon);
+
+  font-family:var(--font-display);
+
+  font-size:35px;
+
+  font-weight:bold;
+
+  margin-top:5px;
 }
 
-/* =========================
+.stat-card.present .stat-value{
+  color:var(--green);
+}
+
+.stat-card.absent .stat-value{
+  color:var(--red);
+}
+
+.stat-card.rate .stat-value{
+  color:var(--amber);
+}
+
+/* ============================================================
    TOOLBAR
-========================= */
+   ============================================================ */
 
 .toolbar{
-    background:white;
-    padding:15px;
-    border-radius:13px;
-    border:1px solid var(--border);
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:20px;
+
+  grid-area:toolbar;
+
+  display:flex;
+
+  gap:10px;
+
+  align-items:center;
+
+  flex-wrap:wrap;
 }
 
-.search{
-    flex:1;
-    min-width:200px;
-    padding:11px 13px;
-    border:1px solid var(--border);
-    border-radius:8px;
-    outline:none;
+.search-wrap{
+
+  position:relative;
+
+  flex:1;
+
+  min-width:200px;
 }
 
-.date-input{
-    padding:11px;
-    border:1px solid var(--border);
-    border-radius:8px;
+.search-input{
+
+  width:100%;
+
+  padding:10px 14px 10px 36px;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:white;
+
+  outline:none;
 }
 
-.filter-btn{
-    padding:10px 14px;
-    border-radius:8px;
-    border:1px solid var(--border);
-    background:white;
-    cursor:pointer;
+.search-icon{
+
+  position:absolute;
+
+  left:12px;
+
+  top:50%;
+
+  transform:translateY(-50%);
+
+  color:var(--text-muted);
 }
 
-.filter-btn.active{
-    background:var(--maroon);
-    color:white;
-    border-color:var(--maroon);
+.filter-chips{
+
+  display:flex;
+
+  gap:6px;
 }
 
-.add-btn{
-    padding:10px 15px;
-    border:none;
-    background:var(--gold);
-    color:var(--maroon-dark);
-    font-weight:bold;
-    border-radius:8px;
-    cursor:pointer;
+.chip{
+
+  padding:8px 14px;
+
+  border:1px solid var(--border);
+
+  border-radius:999px;
+
+  background:white;
+
+  color:var(--text-secondary);
+
+  font-size:12px;
+
+  font-weight:bold;
 }
 
-.add-btn:hover{
-    background:var(--gold-light);
+.chip.active{
+
+  background:var(--maroon);
+
+  color:white;
+
+  border-color:var(--maroon);
 }
 
-/* =========================
-   MAIN LAYOUT
-========================= */
+.chip.present.active{
 
-.dashboard-grid{
-    display:grid;
-    grid-template-columns:1fr 340px;
-    gap:20px;
+  background:var(--green);
+
+  border-color:var(--green);
 }
 
-.panel{
-    background:white;
-    border:1px solid var(--border);
-    border-radius:13px;
-    overflow:hidden;
+.chip.absent.active{
+
+  background:var(--red);
+
+  border-color:var(--red);
 }
 
-.panel-header{
-    padding:17px 20px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+.toolbar-actions{
+
+  display:flex;
+
+  gap:7px;
 }
 
-.panel-header h3{
-    color:var(--maroon);
-    font-size:17px;
+.btn{
+
+  padding:9px 14px;
+
+  border-radius:9px;
+
+  border:1px solid transparent;
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  gap:6px;
 }
 
-/* =========================
-   STUDENTS
-========================= */
+.btn-primary{
 
-.student-grid{
-    padding:18px;
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:14px;
+  background:var(--maroon);
+
+  color:white;
+}
+
+.btn-gold{
+
+  background:var(--gold);
+
+  color:var(--maroon-deep);
+}
+
+.btn-ghost{
+
+  background:white;
+
+  border-color:var(--border);
+
+  color:var(--text-secondary);
+}
+
+/* ============================================================
+   STUDENT GRID
+   ============================================================ */
+
+.grid-area{
+
+  grid-area:grid;
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fill,minmax(260px,1fr));
+
+  gap:14px;
 }
 
 .student-card{
-    border:1px solid var(--border);
-    border-radius:11px;
-    padding:15px;
-    position:relative;
-    background:#fff;
+
+  background:white;
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  padding:16px;
+
+  box-shadow:var(--shadow-sm);
+
+  position:relative;
+}
+
+.student-card.present-card{
+
+  border-left:4px solid var(--green);
+}
+
+.student-card.absent-card{
+
+  border-left:4px solid var(--red-border);
+}
+
+.student-card-header{
+
+  display:flex;
+
+  gap:9px;
+
+  align-items:flex-start;
+
+  margin-bottom:10px;
+}
+
+.student-avatar{
+
+  width:40px;
+  height:40px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(
+    135deg,
+    var(--maroon),
+    var(--gold)
+  );
+
+  color:white;
+
+  font-family:var(--font-display);
+
+  font-weight:bold;
+}
+
+.student-info{
+
+  flex:1;
+
+  min-width:0;
 }
 
 .student-name{
-    font-weight:bold;
-    color:var(--maroon);
-    padding-right:35px;
+
+  font-weight:bold;
+
+  font-size:14px;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
 }
 
 .student-id{
-    color:var(--gray);
-    font-size:13px;
-    margin-top:4px;
+
+  font-family:var(--font-mono);
+
+  font-size:10px;
+
+  color:var(--text-muted);
 }
 
 .student-section{
-    font-size:13px;
-    margin-top:5px;
+
+  font-size:12px;
+
+  color:var(--text-secondary);
+
+  margin-bottom:10px;
 }
 
-.student-status{
-    margin-top:12px;
-    display:inline-block;
-    padding:5px 9px;
-    border-radius:20px;
-    font-size:11px;
-    font-weight:bold;
+.status-badge{
+
+  font-size:9px;
+
+  padding:3px 8px;
+
+  border-radius:999px;
+
+  font-weight:bold;
+
+  text-transform:uppercase;
 }
 
-.status-present{
-    background:#dcfce7;
-    color:var(--green);
+.badge-present{
+
+  background:var(--green-bg);
+
+  color:var(--green);
+
+  border:1px solid var(--green-border);
 }
 
-.status-absent{
-    background:#fee2e2;
-    color:var(--red);
+.badge-absent{
+
+  background:var(--red-bg);
+
+  color:var(--red);
+
+  border:1px solid var(--red-border);
 }
 
-.status-timeout{
-    background:#dbeafe;
-    color:var(--blue);
+.student-times{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:8px;
+
+  border-top:1px solid var(--border);
+
+  padding-top:10px;
+
+  margin-top:10px;
 }
 
-.delete-btn{
-    position:absolute;
-    right:12px;
-    top:12px;
-    width:28px;
-    height:28px;
-    border:none;
-    border-radius:7px;
-    background:#fee2e2;
-    color:var(--red);
-    cursor:pointer;
-    font-weight:bold;
+.time-block-label{
+
+  font-size:9px;
+
+  text-transform:uppercase;
+
+  color:var(--text-muted);
+
+  font-weight:bold;
 }
 
-.delete-btn:hover{
-    background:#fecaca;
+.time-block-val{
+
+  font-family:var(--font-mono);
+
+  font-size:11px;
+
+  font-weight:bold;
 }
 
 .empty{
-    padding:35px;
-    text-align:center;
-    color:var(--gray);
+
+  color:var(--text-muted);
+
+  font-style:italic;
 }
 
-/* =========================
+.delete-student{
+
+  margin-top:12px;
+
+  width:100%;
+
+  padding:7px;
+
+  border-radius:8px;
+
+  border:1px solid var(--red-border);
+
+  color:var(--red);
+
+  background:var(--red-bg);
+
+  font-size:11px;
+
+  font-weight:bold;
+}
+
+.delete-student:hover{
+
+  background:var(--red);
+
+  color:white;
+}
+
+/* ============================================================
    SIDEBAR
-========================= */
+   ============================================================ */
 
-.sidebar-panel{
-    margin-bottom:20px;
+.sidebar-scan{
+
+  grid-area:scan;
+
+  position:sticky;
+
+  top:90px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:14px;
 }
 
-.latest-scan{
-    padding:20px;
-    text-align:center;
+.scan-hero{
+
+  background:
+    linear-gradient(
+      160deg,
+      var(--maroon-deep),
+      var(--maroon)
+    );
+
+  border-radius:22px;
+
+  padding:22px;
+
+  min-height:160px;
+
+  color:white;
+
+  box-shadow:var(--shadow-lg);
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:flex-end;
 }
 
-.scan-icon{
-    width:65px;
-    height:65px;
-    border-radius:50%;
-    margin:0 auto 12px;
-    background:#fff4d6;
-    border:2px solid var(--gold);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--maroon);
-    font-size:25px;
+.scan-label{
+
+  color:var(--gold);
+
+  font-size:10px;
+
+  font-weight:bold;
+
+  letter-spacing:1.5px;
+
+  text-transform:uppercase;
+
+  margin-bottom:10px;
 }
 
-.latest-name{
-    font-size:18px;
-    font-weight:bold;
-    color:var(--maroon);
+.scan-idle{
+
+  text-align:center;
+
+  padding:15px 0;
 }
 
-.latest-info{
-    color:var(--gray);
-    font-size:13px;
-    margin-top:5px;
+.scan-idle-icon{
+
+  opacity:.35;
+
+  margin-bottom:8px;
 }
 
-.scan-list{
-    padding:10px 15px;
+.scan-idle-text{
+
+  color:rgba(255,255,255,.45);
+
+  font-size:13px;
 }
 
-.scan-item{
-    padding:12px 5px;
-    border-bottom:1px solid var(--border);
+.scan-name{
+
+  font-family:var(--font-display);
+
+  font-size:20px;
+
+  font-weight:bold;
 }
 
-.scan-item:last-child{
-    border-bottom:none;
+.scan-meta{
+
+  color:rgba(255,255,255,.65);
+
+  font-size:11px;
+
+  margin:4px 0 10px;
 }
 
-.scan-item strong{
-    color:var(--maroon);
-    font-size:13px;
+.scan-pill{
+
+  display:inline-block;
+
+  padding:5px 11px;
+
+  border-radius:999px;
+
+  font-size:10px;
+
+  font-weight:bold;
 }
 
-.scan-item small{
-    display:block;
-    color:var(--gray);
-    margin-top:3px;
+.pill-present{
+
+  background:rgba(26,122,74,.3);
+
+  color:#6de0a4;
 }
 
-.print-btn{
-    width:calc(100% - 30px);
-    margin:15px;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    background:var(--maroon);
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+.pill-timeout{
+
+  background:rgba(230,181,0,.2);
+
+  color:var(--gold);
 }
 
-.print-btn:hover{
-    background:var(--maroon-dark);
+.pill-unknown{
+
+  background:rgba(255,107,107,.2);
+
+  color:#ff9f9f;
 }
 
-/* =========================
+.scan-time-label{
+
+  font-family:var(--font-mono);
+
+  font-size:10px;
+
+  margin-top:7px;
+
+  color:rgba(255,255,255,.5);
+}
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+.scan-history-panel,
+.print-panel{
+
+  background:white;
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  overflow:hidden;
+
+  box-shadow:var(--shadow-sm);
+}
+
+.history-header,
+.print-panel-title{
+
+  padding:13px 16px;
+
+  border-bottom:1px solid var(--border);
+
+  font-size:11px;
+
+  font-weight:bold;
+
+  color:var(--text-muted);
+
+  text-transform:uppercase;
+
+  letter-spacing:.8px;
+}
+
+.history-list{
+
+  max-height:280px;
+
+  overflow-y:auto;
+}
+
+.history-item{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  padding:10px 16px;
+
+  border-bottom:1px solid var(--border);
+}
+
+.history-dot{
+
+  width:8px;
+  height:8px;
+
+  border-radius:50%;
+}
+
+.dot-present{
+  background:var(--green);
+}
+
+.dot-timeout{
+  background:var(--gold);
+}
+
+.dot-unknown{
+  background:var(--red);
+}
+
+.history-info{
+
+  flex:1;
+
+  min-width:0;
+}
+
+.history-name{
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.history-time{
+
+  font-size:10px;
+
+  color:var(--text-muted);
+
+  font-family:var(--font-mono);
+}
+
+.history-badge{
+
+  font-size:9px;
+
+  font-weight:bold;
+}
+
+.hb-present{
+  color:var(--green);
+}
+
+.hb-timeout{
+  color:var(--amber);
+}
+
+.hb-unknown{
+  color:var(--red);
+}
+
+.history-empty{
+
+  padding:24px;
+
+  text-align:center;
+
+  color:var(--text-muted);
+
+  font-size:12px;
+}
+
+/* ============================================================
+   PRINT PANEL
+   ============================================================ */
+
+.print-panel{
+
+  padding-bottom:15px;
+}
+
+.print-row{
+
+  display:flex;
+
+  gap:8px;
+
+  padding:12px 15px 0;
+}
+
+.date-input{
+
+  flex:1;
+
+  padding:9px;
+
+  border:1px solid var(--border);
+
+  border-radius:8px;
+
+  background:var(--bg-raised);
+}
+
+/* ============================================================
    MODAL
-========================= */
+   ============================================================ */
+
+.modal-overlay{
+
+  display:none;
+
+  position:fixed;
+
+  inset:0;
+
+  z-index:500;
+
+  background:rgba(0,0,0,.55);
+
+  align-items:center;
+
+  justify-content:center;
+
+  padding:20px;
+}
+
+.modal-overlay.open{
+
+  display:flex;
+}
 
 .modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.55);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    z-index:1000;
-}
 
-.modal-box{
-    background:white;
-    width:100%;
-    max-width:500px;
-    border-radius:15px;
-    padding:25px;
+  width:100%;
+
+  max-width:480px;
+
+  background:white;
+
+  border-radius:20px;
+
+  overflow:hidden;
+
+  box-shadow:0 25px 60px rgba(0,0,0,.3);
 }
 
 .modal-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
+
+  padding:18px 22px;
+
+  background:linear-gradient(
+    135deg,
+    var(--maroon-deep),
+    var(--maroon)
+  );
+
+  color:white;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
 }
 
-.modal-header h3{
-    color:var(--maroon);
+.modal-title{
+
+  font-family:var(--font-display);
+
+  font-size:17px;
+
+  font-weight:bold;
 }
 
-.close-btn{
-    border:none;
-    background:none;
-    font-size:25px;
-    cursor:pointer;
-    color:var(--gray);
+.modal-close{
+
+  width:32px;
+
+  height:32px;
+
+  border-radius:50%;
+
+  background:rgba(255,255,255,.12);
+
+  color:white;
 }
 
-.form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+.modal-body{
+
+  padding:22px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:15px;
 }
 
-.form-group{
-    margin-bottom:12px;
+.form-field{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:5px;
 }
 
-.form-group.full{
-    grid-column:1/-1;
+.form-label{
+
+  font-size:11px;
+
+  text-transform:uppercase;
+
+  font-weight:bold;
+
+  color:var(--text-secondary);
 }
 
-.form-group label{
-    display:block;
-    font-size:12px;
-    font-weight:bold;
-    margin-bottom:5px;
+.form-input{
+
+  padding:10px 13px;
+
+  border:1px solid var(--border);
+
+  border-radius:9px;
+
+  background:var(--bg-raised);
+
+  outline:none;
 }
 
-.form-group input{
-    width:100%;
-    padding:11px;
-    border:1px solid var(--border);
-    border-radius:8px;
+.form-input:focus{
+
+  border-color:var(--maroon);
+
+  box-shadow:0 0 0 3px rgba(142,0,0,.1);
 }
 
-.save-btn{
-    width:100%;
-    padding:12px;
-    background:var(--maroon);
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-weight:bold;
-    cursor:pointer;
-    margin-top:10px;
+.rfid-row{
+
+  display:flex;
+
+  gap:7px;
 }
 
-/* =========================
+.rfid-row .form-input{
+  flex:1;
+}
+
+.modal-footer{
+
+  padding:15px 22px;
+
+  background:var(--bg-raised);
+
+  border-top:1px solid var(--border);
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:8px;
+}
+
+.scan-status-text{
+
+  font-size:11px;
+
+  min-height:17px;
+}
+
+.detecting{
+  color:var(--amber);
+}
+
+.detected{
+  color:var(--green);
+}
+
+.failed{
+  color:var(--red);
+}
+
+/* ============================================================
    TOAST
-========================= */
+   ============================================================ */
+
+.toast-container{
+
+  position:fixed;
+
+  right:20px;
+
+  bottom:20px;
+
+  z-index:9999;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
+}
 
 .toast{
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    background:#222;
-    color:white;
-    padding:13px 18px;
-    border-radius:9px;
-    display:none;
-    z-index:2000;
-    box-shadow:0 5px 20px rgba(0,0,0,.2);
+
+  padding:12px 16px;
+
+  background:white;
+
+  border-radius:12px;
+
+  box-shadow:var(--shadow-lg);
+
+  border-left:4px solid var(--maroon);
+
+  font-size:13px;
+
+  max-width:320px;
 }
 
-/* =========================
+.toast.success{
+  border-left-color:var(--green);
+}
+
+.toast.error{
+  border-left-color:var(--red);
+}
+
+.toast.info{
+  border-left-color:var(--gold);
+}
+
+/* ============================================================
    MOBILE
-========================= */
+   ============================================================ */
 
-@media(max-width:900px){
+@media(max-width:1100px){
 
-    .stats{
-        grid-template-columns:repeat(2,1fr);
-    }
+  .main-layout{
 
-    .dashboard-grid{
-        grid-template-columns:1fr;
-    }
+    grid-template-columns:1fr;
 
-    .student-grid{
-        grid-template-columns:1fr;
-    }
+    grid-template-areas:
+      "stats"
+      "toolbar"
+      "grid"
+      "scan";
+  }
+
+  .sidebar-scan{
+    position:static;
+  }
+
 }
 
-@media(max-width:600px){
+@media(max-width:700px){
 
-    .header{
-        padding:12px 15px;
-    }
+  .app-header{
 
-    .header h2{
-        font-size:15px;
-    }
+    height:auto;
 
-    .header small{
-        font-size:10px;
-    }
+    min-height:64px;
 
-    .header-logo-wrap{
-        width:40px;
-        height:40px;
-    }
+    padding:9px 10px;
 
-    .container{
-        padding:12px;
-    }
+    gap:8px;
 
-    .stats{
-        gap:8px;
-    }
+  }
 
-    .stat{
-        padding:14px;
-    }
+  .header-logo-wrap{
 
-    .stat-value{
-        font-size:23px;
-    }
+    width:38px;
 
-    .toolbar{
-        flex-direction:column;
-    }
+    height:38px;
 
-    .search,
-    .date-input,
-    .filter-btn,
-    .add-btn{
-        width:100%;
-    }
+  }
 
-    .form-grid{
-        grid-template-columns:1fr;
-    }
+  .header-school{
+    font-size:14px;
+  }
 
-    .form-group.full{
-        grid-column:auto;
-    }
+  .header-sub{
+    font-size:8px;
+  }
+
+  .header-clock{
+    display:none;
+  }
+
+  .header-status span:last-child{
+    display:none;
+  }
+
+  .logout-btn{
+    font-size:10px;
+    padding:6px 8px;
+  }
+
+  .main-layout{
+
+    padding:14px 10px 40px;
+
+  }
+
+  .stats-row{
+
+    grid-template-columns:repeat(2,1fr);
+
+  }
+
+  .stat-card{
+    padding:15px;
+  }
+
+  .stat-value{
+    font-size:28px;
+  }
+
+  .toolbar{
+
+    align-items:stretch;
+
+  }
+
+  .search-wrap{
+
+    min-width:100%;
+
+  }
+
+  .filter-chips{
+
+    width:100%;
+
+  }
+
+  .chip{
+
+    flex:1;
+
+  }
+
+  .toolbar-actions{
+
+    width:100%;
+
+  }
+
+  .toolbar-actions .btn{
+
+    flex:1;
+
+    justify-content:center;
+
+  }
+
+  .grid-area{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .print-row{
+
+    flex-direction:column;
+
+  }
+
+  .print-row .btn,
+  .date-input{
+
+    width:100%;
+
+  }
+
+  .modal-overlay{
+
+    align-items:flex-start;
+
+    padding:10px;
+
+  }
+
+  .modal{
+
+    margin-top:10px;
+
+  }
+
+  .rfid-row{
+
+    flex-direction:column;
+
+  }
+
+  .rfid-row .btn{
+
+    width:100%;
+
+    justify-content:center;
+
+  }
+
+  .toast-container{
+
+    left:10px;
+
+    right:10px;
+
+    bottom:10px;
+
+  }
+
+  .toast{
+
+    max-width:none;
+
+  }
+
 }
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.loading{
+
+  opacity:.6;
+
+  pointer-events:none;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- =========================
-     LOGIN
-========================= -->
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
 
-<div id="loginScreen" class="login-screen">
+<div id="login-screen" class="login-screen">
 
-    <div class="login-box">
+  <div class="login-box">
 
-        <div class="login-logo">
-            GA
-        </div>
+    <img
+      src="global-academy-logo.jpg"
+      class="login-logo"
+      alt="Global Academy"
+      onerror="
+        this.style.display='none';
+        document.getElementById('login-fallback').style.display='flex';
+      "
+    >
 
-        <h1>Global Academy</h1>
-        <p>Smart RFID Attendance System</p>
+    <div id="login-fallback" class="login-fallback" style="display:none;">
+      GA
+    </div>
 
-        <div class="input-group">
-            <label>Email</label>
-            <input
-                type="email"
-                id="loginEmail"
-                placeholder="Admin email"
-            >
-        </div>
+    <div class="login-title">
+      Global Academy
+    </div>
 
-        <div class="input-group">
-            <label>Password</label>
-            <input
-                type="password"
-                id="loginPassword"
-                placeholder="Password"
-            >
-        </div>
+    <div class="login-subtitle">
+      Smart RFID Attendance
+    </div>
 
-        <button class="login-btn" onclick="login()">
-            LOGIN
-        </button>
+    <div class="login-field">
 
-        <div id="loginError" class="login-error"></div>
+      <label class="login-label">
+        Admin Email
+      </label>
+
+      <input
+        id="login-email"
+        class="login-input"
+        type="email"
+        placeholder="admin@example.com"
+        autocomplete="username"
+      >
 
     </div>
+
+    <div class="login-field">
+
+      <label class="login-label">
+        Password
+      </label>
+
+      <input
+        id="login-password"
+        class="login-input"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+      >
+
+    </div>
+
+    <button
+      id="login-btn"
+      class="login-btn"
+    >
+      Login
+    </button>
+
+    <div id="login-error" class="login-error"></div>
+
+    <div id="login-loading" class="login-loading">
+      Signing in...
+    </div>
+
+  </div>
 
 </div>
 
 
-<!-- =========================
-     APP
-========================= -->
+<!-- ============================================================
+     APPLICATION
+     ============================================================ -->
 
 <div id="app">
 
-    <header class="header">
+<header class="app-header">
 
-        <div class="header-left">
+  <div class="header-logo-wrap">
 
-            <div class="header-logo-wrap">
+    <img
+      src="global-academy-logo.jpg"
+      alt="Global Academy"
+    >
 
-                <!--
-                If you have a logo, replace this div with:
+  </div>
 
-                <img src="YOUR_LOGO.png">
-                -->
+  <div class="header-titles">
 
-                <div class="header-logo-text">
-                    GA
-                </div>
+    <div class="header-school">
+      Global Academy
+    </div>
 
-            </div>
+    <div class="header-sub">
+      Smart RFID Attendance System
+    </div>
 
-            <div>
-                <h2>Global Academy</h2>
-                <small>Smart RFID Attendance System</small>
-            </div>
+  </div>
 
-        </div>
+  <div class="header-clock">
 
-        <div class="header-right">
-
-            <button
-                class="logout-btn"
-                onclick="logout()"
-            >
-                Logout
-            </button>
-
-        </div>
-
-    </header>
-
-
-    <main class="container">
-
-        <!-- STATS -->
-
-        <section class="stats">
-
-            <div class="stat">
-                <div class="stat-title">
-                    Total Students
-                </div>
-
-                <div
-                    class="stat-value"
-                    id="totalStudents"
-                >
-                    0
-                </div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-title">
-                    Present
-                </div>
-
-                <div
-                    class="stat-value"
-                    id="presentStudents"
-                >
-                    0
-                </div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-title">
-                    Absent
-                </div>
+    <div id="clock-time" class="clock-time">
+      --:--:--
+    </div>
 
-                <div
-                    class="stat-value"
-                    id="absentStudents"
-                >
-                    0
-                </div>
-            </div>
+    <div id="clock-date" class="clock-date">
+      Loading...
+    </div>
 
-            <div class="stat">
-                <div class="stat-title">
-                    Timed Out
-                </div>
+  </div>
 
-                <div
-                    class="stat-value"
-                    id="timeoutStudents"
-                >
-                    0
-                </div>
-            </div>
+  <div id="conn-status" class="header-status">
 
-        </section>
+    <span id="conn-dot" class="status-dot"></span>
 
+    <span id="conn-text">
+      Connecting
+    </span>
 
-        <!-- TOOLBAR -->
+  </div>
 
-        <section class="toolbar">
+  <button
+    id="logout-btn"
+    class="logout-btn"
+  >
+    Logout
+  </button>
 
-            <input
-                id="searchInput"
-                class="search"
-                type="text"
-                placeholder="Search student name, ID, or section..."
-                oninput="handleSearch()"
-            >
+</header>
 
-            <input
-                id="attendanceDate"
-                class="date-input"
-                type="date"
-                onchange="changeDate()"
-            >
 
-            <button
-                id="filterAll"
-                class="filter-btn active"
-                onclick="setFilter('all')"
-            >
-                All
-            </button>
+<main class="main-layout">
 
-            <button
-                id="filterPresent"
-                class="filter-btn"
-                onclick="setFilter('present')"
-            >
-                Present
-            </button>
 
-            <button
-                id="filterAbsent"
-                class="filter-btn"
-                onclick="setFilter('absent')"
-            >
-                Absent
-            </button>
+<!-- ============================================================
+     STATS
+     ============================================================ -->
 
-            <button
-                id="filterTimeout"
-                class="filter-btn"
-                onclick="setFilter('timeout')"
-            >
-                Timed Out
-            </button>
+<section class="stats-row">
 
-            <button
-                class="add-btn"
-                onclick="openAddStudent()"
-            >
-                + Add Student
-            </button>
+  <div class="stat-card">
 
-        </section>
+    <div class="stat-label">
+      Total Students
+    </div>
 
+    <div id="stat-total" class="stat-value">
+      0
+    </div>
 
-        <!-- DASHBOARD -->
+  </div>
 
-        <div class="dashboard-grid">
 
-            <!-- STUDENTS -->
+  <div class="stat-card present">
 
-            <section class="panel">
+    <div class="stat-label">
+      Present
+    </div>
 
-                <div class="panel-header">
+    <div id="stat-present" class="stat-value">
+      0
+    </div>
 
-                    <h3>
-                        Student Attendance
-                    </h3>
+  </div>
 
-                    <span
-                        id="selectedDateLabel"
-                        style="font-size:12px;color:#6b7280"
-                    ></span>
 
-                </div>
+  <div class="stat-card absent">
 
-                <div
-                    id="studentGrid"
-                    class="student-grid"
-                ></div>
+    <div class="stat-label">
+      Absent
+    </div>
 
-            </section>
+    <div id="stat-absent" class="stat-value">
+      0
+    </div>
 
+  </div>
 
-            <!-- SIDEBAR -->
 
-            <aside>
+  <div class="stat-card rate">
 
-                <!-- LATEST SCAN -->
+    <div class="stat-label">
+      Attendance Rate
+    </div>
 
-                <section class="panel sidebar-panel">
+    <div id="stat-rate" class="stat-value">
+      0%
+    </div>
 
-                    <div class="panel-header">
-                        <h3>Latest Scan</h3>
-                    </div>
+  </div>
 
-                    <div
-                        id="latestScan"
-                        class="latest-scan"
-                    >
+</section>
 
-                        <div class="scan-icon">
-                            RFID
-                        </div>
 
-                        <div class="latest-name">
-                            No scan yet
-                        </div>
+<!-- ============================================================
+     TOOLBAR
+     ============================================================ -->
 
-                        <div class="latest-info">
-                            Waiting for RFID scan...
-                        </div>
+<div class="toolbar">
 
-                    </div>
+  <div class="search-wrap">
 
-                </section>
+    <span class="search-icon">
+      🔎
+    </span>
 
+    <input
+      id="search-input"
+      class="search-input"
+      type="search"
+      placeholder="Search by name, ID, or section..."
+    >
 
-                <!-- RECENT SCANS -->
+  </div>
 
-                <section class="panel sidebar-panel">
 
-                    <div class="panel-header">
-                        <h3>Recent Scans</h3>
-                    </div>
+  <div class="filter-chips">
 
-                    <div
-                        id="scanList"
-                        class="scan-list"
-                    >
-                        <div class="empty">
-                            No recent scans
-                        </div>
-                    </div>
+    <button
+      class="chip active"
+      data-filter="all"
+    >
+      All
+    </button>
 
-                </section>
+    <button
+      class="chip present"
+      data-filter="present"
+    >
+      Present
+    </button>
 
+    <button
+      class="chip absent"
+      data-filter="absent"
+    >
+      Absent
+    </button>
 
-                <!-- PRINT -->
+  </div>
 
-                <section class="panel">
 
-                    <div class="panel-header">
-                        <h3>Attendance Report</h3>
-                    </div>
+  <div
+    id="showing-count"
+    style="font-size:12px;color:var(--text-muted)"
+  >
+    Showing 0
+  </div>
 
-                    <button
-                        class="print-btn"
-                        onclick="printPDF()"
-                    >
-                        Print PDF Report
-                    </button>
 
-                </section>
+  <div class="toolbar-actions">
 
-            </aside>
+    <button
+      id="refresh-btn"
+      class="btn btn-ghost"
+    >
+      ↻ Refresh
+    </button>
 
-        </div>
+    <button
+      id="add-student-btn"
+      class="btn btn-primary"
+    >
+      ＋ Add Student
+    </button>
 
-    </main>
+  </div>
 
 </div>
 
 
-<!-- =========================
-     ADD STUDENT MODAL
-========================= -->
+<!-- ============================================================
+     STUDENT GRID
+     ============================================================ -->
 
-<div
-    id="studentModal"
-    class="modal"
->
-
-    <div class="modal-box">
-
-        <div class="modal-header">
-
-            <h3>Add Student</h3>
-
-            <button
-                class="close-btn"
-                onclick="closeAddStudent()"
-            >
-                ×
-            </button>
-
-        </div>
+<section
+  id="student-grid"
+  class="grid-area"
+></section>
 
 
-        <div class="form-grid">
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
 
-            <div class="form-group">
-
-                <label>
-                    Student ID
-                </label>
-
-                <input
-                    id="studentID"
-                    placeholder="2026-0001"
-                >
-
-            </div>
+<aside class="sidebar-scan">
 
 
-            <div class="form-group">
+  <div
+    id="scan-hero"
+    class="scan-hero"
+  >
 
-                <label>
-                    RFID UID
-                </label>
+    <div class="scan-label">
+      ● Latest RFID Scan
+    </div>
 
-                <input
-                    id="studentRFID"
-                    placeholder="RFID UID"
-                >
+    <div id="scan-content">
 
-            </div>
+      <div class="scan-idle">
 
-
-            <div class="form-group full">
-
-                <label>
-                    Full Name
-                </label>
-
-                <input
-                    id="studentName"
-                    placeholder="Juan Dela Cruz"
-                >
-
-            </div>
-
-
-            <div class="form-group full">
-
-                <label>
-                    Course / Section
-                </label>
-
-                <input
-                    id="studentSection"
-                    placeholder="BSIT 1A"
-                >
-
-            </div>
-
-        </div>
-
-
-        <button
-            class="save-btn"
-            onclick="saveStudent()"
+        <div
+          class="scan-idle-icon"
+          style="font-size:38px"
         >
-            Save Student
-        </button>
+          💳
+        </div>
+
+        <div class="scan-idle-text">
+          Waiting for card tap...
+        </div>
+
+      </div>
 
     </div>
 
+  </div>
+
+
+  <!-- ========================================================
+       HISTORY
+       ======================================================== -->
+
+  <div class="scan-history-panel">
+
+    <div class="history-header">
+      Recent Scans
+    </div>
+
+    <div
+      id="history-list"
+      class="history-list"
+    >
+      <div class="history-empty">
+        No scans this session
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================
+       PRINT
+       ======================================================== -->
+
+  <div class="print-panel">
+
+    <div class="print-panel-title">
+      Print Report
+    </div>
+
+    <div class="print-row">
+
+      <input
+        id="print-date"
+        class="date-input"
+        type="date"
+      >
+
+      <button
+        id="print-btn"
+        class="btn btn-gold"
+      >
+        🖨 Print PDF
+      </button>
+
+    </div>
+
+  </div>
+
+
+</aside>
+
+</main>
+
 </div>
 
 
-<!-- TOAST -->
+<!-- ============================================================
+     ADD STUDENT MODAL
+     ============================================================ -->
 
 <div
-    id="toast"
-    class="toast"
+  id="modal-overlay"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <div class="modal-title">
+        Add New Student
+      </div>
+
+      <button
+        id="modal-close-btn"
+        class="modal-close"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="modal-body">
+
+
+      <div class="form-field">
+
+        <label class="form-label">
+          Student ID Number *
+        </label>
+
+        <input
+          id="inp-sid"
+          class="form-input"
+          type="text"
+          placeholder="2024-0001"
+        >
+
+      </div>
+
+
+      <div class="form-field">
+
+        <label class="form-label">
+          Full Name *
+        </label>
+
+        <input
+          id="inp-name"
+          class="form-input"
+          type="text"
+          placeholder="Last, First Middle"
+        >
+
+      </div>
+
+
+      <div class="form-field">
+
+        <label class="form-label">
+          RFID UID *
+        </label>
+
+        <div class="rfid-row">
+
+          <input
+            id="inp-uid"
+            class="form-input"
+            type="text"
+            placeholder="A1B2C3D4"
+          >
+
+          <button
+            id="scan-uid-btn"
+            class="btn btn-ghost"
+          >
+            💳 Scan ID
+          </button>
+
+        </div>
+
+        <div
+          id="scan-status"
+          class="scan-status-text"
+        ></div>
+
+      </div>
+
+
+      <div class="form-field">
+
+        <label class="form-label">
+          Course / Section
+        </label>
+
+        <input
+          id="inp-section"
+          class="form-input"
+          type="text"
+          placeholder="BSIT 2-A"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="modal-footer">
+
+      <button
+        id="modal-cancel-btn"
+        class="btn btn-ghost"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="modal-save-btn"
+        class="btn btn-primary"
+      >
+        Save Student
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     TOAST
+     ============================================================ -->
+
+<div
+  id="toast-container"
+  class="toast-container"
 ></div>
 
 
 <script>
 
-/* =========================================================
-   SUPABASE
-========================================================= */
+(function(){
+
+'use strict';
+
+
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
 
 const SUPABASE_URL =
-    'https://tlmlyymsxihzbmksinfn.supabase.co';
+  'https://tlmlyymsxihzbmksinfn.supabase.co';
 
 const SUPABASE_KEY =
-    'sb_publishable_FWKNh4QI-Iw8sT-IzBcxcg_8epcmbmv';
+  'sb_publishable_FWKNh4QI-Iw8sT-IzBcxcg_8epcmbmv';
 
-const TIMEZONE =
-    'Asia/Manila';
+const TIMEZONE = 'Asia/Manila';
+
+const MAX_HISTORY = 5;
+
+
+/* ============================================================
+   SUPABASE
+   ============================================================ */
 
 const sb =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
 
-/* =========================================================
+/* ============================================================
    STATE
-========================================================= */
+   ============================================================ */
 
 const state = {
 
-    students: [],
+  students: [],
 
-    attendance: {},
+  attendance: {},
 
-    scanHistory: [],
+  scanHistory: [],
 
-    filter: 'all',
+  filter: 'all',
 
-    searchQ: '',
+  searchQ: '',
 
-    attendanceDate: null,
+  attendanceDate: null,
 
-    mainChannel: null,
+  mainChannel: null,
 
-    scanChannel: null,
+  scanChannel: null,
 
-    scanTimer: null
+  scanTimer: null
 
 };
 
 
-/* =========================================================
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+
+const el = {
+
+  loginScreen:
+    document.getElementById('login-screen'),
+
+  app:
+    document.getElementById('app'),
+
+  loginEmail:
+    document.getElementById('login-email'),
+
+  loginPassword:
+    document.getElementById('login-password'),
+
+  loginBtn:
+    document.getElementById('login-btn'),
+
+  loginError:
+    document.getElementById('login-error'),
+
+  loginLoading:
+    document.getElementById('login-loading'),
+
+  logoutBtn:
+    document.getElementById('logout-btn'),
+
+  clockTime:
+    document.getElementById('clock-time'),
+
+  clockDate:
+    document.getElementById('clock-date'),
+
+  connDot:
+    document.getElementById('conn-dot'),
+
+  connText:
+    document.getElementById('conn-text'),
+
+  statTotal:
+    document.getElementById('stat-total'),
+
+  statPresent:
+    document.getElementById('stat-present'),
+
+  statAbsent:
+    document.getElementById('stat-absent'),
+
+  statRate:
+    document.getElementById('stat-rate'),
+
+  studentGrid:
+    document.getElementById('student-grid'),
+
+  showingCount:
+    document.getElementById('showing-count'),
+
+  searchInput:
+    document.getElementById('search-input'),
+
+  refreshBtn:
+    document.getElementById('refresh-btn'),
+
+  addStudentBtn:
+    document.getElementById('add-student-btn'),
+
+  scanHero:
+    document.getElementById('scan-hero'),
+
+  scanContent:
+    document.getElementById('scan-content'),
+
+  historyList:
+    document.getElementById('history-list'),
+
+  printDate:
+    document.getElementById('print-date'),
+
+  printBtn:
+    document.getElementById('print-btn'),
+
+  modalOverlay:
+    document.getElementById('modal-overlay'),
+
+  modalCloseBtn:
+    document.getElementById('modal-close-btn'),
+
+  modalCancelBtn:
+    document.getElementById('modal-cancel-btn'),
+
+  modalSaveBtn:
+    document.getElementById('modal-save-btn'),
+
+  inpSid:
+    document.getElementById('inp-sid'),
+
+  inpName:
+    document.getElementById('inp-name'),
+
+  inpUid:
+    document.getElementById('inp-uid'),
+
+  inpSection:
+    document.getElementById('inp-section'),
+
+  scanUidBtn:
+    document.getElementById('scan-uid-btn'),
+
+  scanStatus:
+    document.getElementById('scan-status'),
+
+  toastContainer:
+    document.getElementById('toast-container')
+
+};
+
+
+/* ============================================================
    HELPERS
-========================================================= */
+   ============================================================ */
 
-function todayManila(){
+function esc(value){
 
-    const now = new Date();
+  const div =
+    document.createElement('div');
 
-    return new Intl.DateTimeFormat(
-        'en-CA',
-        {
-            timeZone: TIMEZONE,
-            year:'numeric',
-            month:'2-digit',
-            day:'2-digit'
-        }
-    ).format(now);
+  div.textContent =
+    value == null ? '' : String(value);
+
+  return div.innerHTML;
 
 }
 
 
-function formatTime(value){
+function initials(name){
 
-    if(!value) return '--';
+  if(!name) return '?';
 
-    const date = new Date(value);
+  const parts =
+    name.trim().split(/\s+/);
 
-    return new Intl.DateTimeFormat(
-        'en-US',
-        {
-            timeZone: TIMEZONE,
-            hour:'2-digit',
-            minute:'2-digit',
-            second:'2-digit',
-            hour12:true
-        }
-    ).format(date);
+  if(parts.length === 1)
+    return parts[0][0].toUpperCase();
+
+  return (
+    parts[0][0] +
+    parts[parts.length - 1][0]
+  ).toUpperCase();
 
 }
 
 
-function formatDateLong(dateString){
+function manilaDate(){
 
-    const date =
-        new Date(
-            dateString + 'T00:00:00+08:00'
-        );
-
-    return new Intl.DateTimeFormat(
-        'en-US',
-        {
-            timeZone:TIMEZONE,
-            weekday:'long',
-            month:'long',
-            day:'numeric',
-            year:'numeric'
-        }
-    ).format(date);
+  return new Date().toLocaleDateString(
+    'en-CA',
+    {
+      timeZone: TIMEZONE
+    }
+  );
 
 }
 
 
-function showToast(message){
+function formatTime(timestamp){
 
-    const toast =
-        document.getElementById('toast');
+  if(!timestamp) return '--';
 
-    toast.textContent = message;
-
-    toast.style.display = 'block';
-
-    clearTimeout(state.scanTimer);
-
-    state.scanTimer =
-        setTimeout(
-            ()=>{
-                toast.style.display = 'none';
-            },
-            3000
-        );
+  return new Date(timestamp).toLocaleTimeString(
+    'en-US',
+    {
+      timeZone: TIMEZONE,
+      hour:'2-digit',
+      minute:'2-digit',
+      second:'2-digit',
+      hour12:true
+    }
+  );
 
 }
 
 
-/* =========================================================
+function formatDate(date){
+
+  return new Date(date).toLocaleDateString(
+    'en-US',
+    {
+      timeZone:TIMEZONE,
+      weekday:'long',
+      year:'numeric',
+      month:'long',
+      day:'numeric'
+    }
+  );
+
+}
+
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+
+function toast(message,type='info'){
+
+  const item =
+    document.createElement('div');
+
+  item.className =
+    'toast ' + type;
+
+  item.textContent =
+    message;
+
+  el.toastContainer.appendChild(item);
+
+  setTimeout(
+    () => item.remove(),
+    3500
+  );
+
+}
+
+
+/* ============================================================
    LOGIN
-========================================================= */
+   ============================================================ */
 
 async function login(){
 
-    const email =
-        document.getElementById(
-            'loginEmail'
-        ).value.trim();
+  const email =
+    el.loginEmail.value.trim();
 
-    const password =
-        document.getElementById(
-            'loginPassword'
-        ).value;
+  const password =
+    el.loginPassword.value;
 
-    const error =
-        document.getElementById(
-            'loginError'
-        );
+  if(!email || !password){
 
-    error.textContent = '';
+    showLoginError(
+      'Please enter your email and password.'
+    );
 
-    if(!email || !password){
+    return;
 
-        error.textContent =
-            'Please enter your email and password.';
+  }
 
-        return;
+  el.loginBtn.disabled = true;
 
-    }
+  el.loginLoading.style.display =
+    'block';
 
-    try{
+  el.loginError.classList.remove('show');
 
-        const {error:loginError} =
-            await sb.auth.signInWithPassword({
 
-                email:email,
+  const {
+    data,
+    error
+  } =
+    await sb.auth.signInWithPassword({
+      email,
+      password
+    });
 
-                password:password
 
-            });
+  el.loginBtn.disabled = false;
 
-        if(loginError){
+  el.loginLoading.style.display =
+    'none';
 
-            error.textContent =
-                loginError.message;
 
-            return;
+  if(error){
 
-        }
+    showLoginError(
+      error.message
+    );
 
-        showApp();
+    return;
 
-    }catch(err){
+  }
 
-        error.textContent =
-            err.message;
 
-    }
+  if(data.session){
+
+    showApp();
+
+  }
 
 }
 
 
-async function logout(){
+function showLoginError(message){
 
-    await sb.auth.signOut();
+  el.loginError.textContent =
+    message;
 
-    location.reload();
+  el.loginError.classList.add('show');
 
 }
 
 
 function showApp(){
 
-    document.getElementById(
-        'loginScreen'
-    ).style.display = 'none';
+  el.loginScreen.style.display =
+    'none';
 
-    document.getElementById(
-        'app'
-    ).style.display = 'block';
+  el.app.style.display =
+    'block';
 
-    initializeApp();
+  initializeApp();
 
 }
 
 
-/* =========================================================
+function showLogin(){
+
+  el.app.style.display =
+    'none';
+
+  el.loginScreen.style.display =
+    'flex';
+
+}
+
+
+async function logout(){
+
+  await sb.auth.signOut();
+
+  if(state.mainChannel){
+
+    try{
+      await state.mainChannel.unsubscribe();
+    }catch(e){}
+
+    state.mainChannel = null;
+
+  }
+
+  showLogin();
+
+}
+
+
+/* ============================================================
    AUTH CHECK
-========================================================= */
+   ============================================================ */
 
 async function checkAuth(){
 
-    const {
-        data
-    } = await sb.auth.getSession();
+  const {
+    data
+  } =
+    await sb.auth.getSession();
 
-    if(data.session){
+  if(data.session){
 
-        showApp();
+    showApp();
 
-    }
+  }else{
+
+    showLogin();
+
+  }
 
 }
 
 
-sb.auth.onAuthStateChange(
-    (event,session)=>{
+/* ============================================================
+   CLOCK
+   ============================================================ */
 
-        if(session){
+function updateClock(){
 
-            document.getElementById(
-                'loginScreen'
-            ).style.display = 'none';
+  const now =
+    new Date();
 
-            document.getElementById(
-                'app'
-            ).style.display = 'block';
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-async function initializeApp(){
-
-    const date =
-        todayManila();
-
-    state.attendanceDate =
-        date;
-
-    document.getElementById(
-        'attendanceDate'
-    ).value = date;
-
-    updateDateLabel();
-
-    await loadStudents();
-
-    await loadAttendance(
-        state.attendanceDate
+  el.clockTime.textContent =
+    now.toLocaleTimeString(
+      'en-US',
+      {
+        timeZone:TIMEZONE,
+        hour12:true
+      }
     );
 
-    await loadRecentScans();
-
-    setupRealtime();
+  el.clockDate.textContent =
+    formatDate(now);
 
 }
 
 
-/* =========================================================
+/* ============================================================
+   CONNECTION
+   ============================================================ */
+
+function connectionStatus(status){
+
+  if(status === 'live'){
+
+    el.connDot.className =
+      'status-dot live';
+
+    el.connText.textContent =
+      'LIVE';
+
+  }
+
+  else if(status === 'error'){
+
+    el.connDot.className =
+      'status-dot error';
+
+    el.connText.textContent =
+      'ERROR';
+
+  }
+
+  else{
+
+    el.connDot.className =
+      'status-dot';
+
+    el.connText.textContent =
+      'CONNECTING';
+
+  }
+
+}
+
+
+/* ============================================================
    LOAD STUDENTS
-========================================================= */
+   ============================================================ */
 
 async function loadStudents(){
 
-    const {
-        data,
-        error
-    } = await sb
-        .from('students')
-        .select('*')
-        .order(
-            'full_name',
-            {
-                ascending:true
-            }
-        );
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from('students')
+      .select('*')
+      .order(
+        'student_id_number',
+        {
+          ascending:true
+        }
+      );
 
-    if(error){
 
-        console.error(error);
+  if(error){
 
-        showToast(
-            'Failed to load students'
-        );
+    toast(
+      'Failed to load students: ' +
+      error.message,
+      'error'
+    );
 
-        return;
+    return;
 
-    }
+  }
 
-    state.students =
-        data || [];
 
-    renderGrid();
+  state.students =
+    data || [];
 
 }
 
 
-/* =========================================================
-   ATTENDANCE
-========================================================= */
+/* ============================================================
+   LOAD ATTENDANCE FOR DATE
+   ============================================================ */
 
 async function loadAttendance(dateValue){
 
-    state.attendance = {};
+  if(!dateValue)
+    dateValue =
+      manilaDate();
 
-    const start =
-        `${dateValue}T00:00:00+08:00`;
 
-    const end =
-        `${dateValue}T23:59:59+08:00`;
+  const start =
+    `${dateValue}T00:00:00+08:00`;
 
-    const {
-        data,
-        error
-    } = await sb
-        .from('attendance_records')
-        .select('*')
-        .gte(
-            'timestamp',
-            start
-        )
-        .lte(
-            'timestamp',
-            end
-        )
-        .order(
-            'timestamp',
-            {
-                ascending:true
-            }
-        );
+  const end =
+    `${dateValue}T23:59:59+08:00`;
 
-    if(error){
 
-        console.error(error);
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from('attendance_records')
+      .select('*')
+      .gte('timestamp',start)
+      .lte('timestamp',end)
+      .order(
+        'timestamp',
+        {
+          ascending:true
+        }
+      );
 
-        showToast(
-            'Failed to load attendance'
-        );
 
-        return;
+  if(error){
+
+    toast(
+      'Failed to load attendance: ' +
+      error.message,
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  state.attendance = {};
+
+
+  (data || []).forEach(row => {
+
+    const uid =
+      row.scanned_rfid;
+
+    const status =
+      String(row.status || '')
+        .toLowerCase()
+        .trim();
+
+
+    if(!state.attendance[uid]){
+
+      state.attendance[uid] = {
+
+        inTime:null,
+
+        outTime:null,
+
+        status:'Present',
+
+        id:row.id
+
+      };
 
     }
 
 
-    (data || []).forEach(
-        record => {
+    if(
+      status === 'present'
+      &&
+      !state.attendance[uid].inTime
+    ){
 
-            const uid =
-                String(
-                    record.scanned_rfid || ''
-                ).trim().toUpperCase();
+      state.attendance[uid].inTime =
+        row.timestamp;
 
-            if(!uid) return;
-
-            if(!state.attendance[uid]){
-
-                state.attendance[uid] = {
-
-                    inTime:null,
-
-                    outTime:null,
-
-                    status:'present'
-
-                };
-
-            }
-
-            const status =
-                String(
-                    record.status || ''
-                ).toLowerCase();
+    }
 
 
-            if(
-                status === 'time out' ||
-                status === 'timeout' ||
-                status === 'out'
-            ){
+    if(
+      status === 'time out'
+      ||
+      status === 'timeout'
+    ){
 
-                state.attendance[uid].outTime =
-                    record.timestamp;
+      state.attendance[uid].outTime =
+        row.timestamp;
 
-                state.attendance[uid].status =
-                    'timeout';
+      state.attendance[uid].status =
+        'Time Out';
 
-            }else{
+    }
 
-                if(
-                    !state.attendance[uid].inTime
-                ){
-
-                    state.attendance[uid].inTime =
-                        record.timestamp;
-
-                }
-
-                state.attendance[uid].status =
-                    'present';
-
-            }
-
-        }
-    );
+  });
 
 
-    renderGrid();
+  state.attendanceDate =
+    dateValue;
+
+
+  renderGrid();
 
 }
 
 
-/* =========================================================
+/* ============================================================
    RENDER GRID
-========================================================= */
+   ============================================================ */
 
 function renderGrid(){
 
-    const grid =
-        document.getElementById(
-            'studentGrid'
-        );
-
-    let students =
-        [...state.students];
+  const search =
+    state.searchQ
+      .toLowerCase()
+      .trim();
 
 
-    const query =
-        state.searchQ.toLowerCase();
+  const filtered =
+    state.students.filter(student => {
+
+      const attendance =
+        state.attendance[
+          student.rfid_uid
+        ];
+
+      const present =
+        !!attendance;
 
 
-    if(query){
-
-        students =
-            students.filter(
-                student => {
-
-                    return (
-
-                        String(
-                            student.full_name || ''
-                        )
-                        .toLowerCase()
-                        .includes(query)
-
-                        ||
-
-                        String(
-                            student.student_id_number || ''
-                        )
-                        .toLowerCase()
-                        .includes(query)
-
-                        ||
-
-                        String(
-                            student.course_section || ''
-                        )
-                        .toLowerCase()
-                        .includes(query)
-
-                    );
-
-                }
-            );
-
-    }
+      if(
+        state.filter === 'present'
+        &&
+        !present
+      )
+        return false;
 
 
-    students =
-        students.filter(
-            student => {
-
-                const uid =
-                    String(
-                        student.rfid_uid || ''
-                    ).trim().toUpperCase();
-
-                const record =
-                    state.attendance[uid];
-
-                let status =
-                    record
-                    ? (
-                        record.status === 'timeout'
-                        ? 'timeout'
-                        : 'present'
-                    )
-                    : 'absent';
+      if(
+        state.filter === 'absent'
+        &&
+        present
+      )
+        return false;
 
 
-                if(
-                    state.filter !== 'all'
-                    &&
-                    state.filter !== status
-                ){
-
-                    return false;
-
-                }
-
-                return true;
-
-            }
-        );
+      if(!search)
+        return true;
 
 
-    if(!students.length){
+      return (
 
-        grid.innerHTML =
-            `<div class="empty">
-                No students found.
-            </div>`;
+        String(
+          student.full_name || ''
+        )
+        .toLowerCase()
+        .includes(search)
 
-        updateStats();
+        ||
 
-        return;
+        String(
+          student.student_id_number || ''
+        )
+        .toLowerCase()
+        .includes(search)
 
-    }
+        ||
 
+        String(
+          student.course_section || ''
+        )
+        .toLowerCase()
+        .includes(search)
 
-    grid.innerHTML =
-        students.map(
-            student => {
+      );
 
-                const uid =
-                    String(
-                        student.rfid_uid || ''
-                    ).trim().toUpperCase();
-
-                const record =
-                    state.attendance[uid];
-
-
-                let status =
-                    record
-                    ? (
-                        record.status === 'timeout'
-                        ? 'timeout'
-                        : 'present'
-                    )
-                    : 'absent';
+    });
 
 
-                let statusText =
-                    status === 'present'
-                    ? 'Present'
-                    : status === 'timeout'
-                    ? 'Timed Out'
-                    : 'Absent';
+  const total =
+    state.students.length;
 
 
-                let statusClass =
-                    status === 'present'
-                    ? 'status-present'
-                    : status === 'timeout'
-                    ? 'status-timeout'
-                    : 'status-absent';
+  const present =
+    state.students.filter(
+      student =>
+        !!state.attendance[
+          student.rfid_uid
+        ]
+    ).length;
 
 
-                return `
-
-                    <div class="student-card">
-
-                        <button
-                            class="delete-btn"
-                            onclick="deleteStudent('${student.id}')"
-                            title="Delete student"
-                        >
-                            ×
-                        </button>
-
-                        <div class="student-name">
-                            ${escapeHTML(
-                                student.full_name || 'Unnamed'
-                            )}
-                        </div>
-
-                        <div class="student-id">
-                            ID:
-                            ${escapeHTML(
-                                student.student_id_number || '--'
-                            )}
-                        </div>
-
-                        <div class="student-section">
-                            ${escapeHTML(
-                                student.course_section || '--'
-                            )}
-                        </div>
-
-                        <span
-                            class="student-status ${statusClass}"
-                        >
-                            ${statusText}
-                        </span>
-
-                        ${
-                            record
-                            ?
-                            `<div
-                                style="
-                                    margin-top:9px;
-                                    font-size:11px;
-                                    color:#6b7280;
-                                "
-                            >
-                                Time In:
-                                ${formatTime(record.inTime)}
-
-                                <br>
-
-                                Time Out:
-                                ${formatTime(record.outTime)}
-                            </div>`
-                            :
-                            ''
-                        }
-
-                    </div>
-
-                `;
-
-            }
-        ).join('');
+  const absent =
+    total - present;
 
 
-    updateStats();
+  const rate =
+    total
+      ? Math.round(
+          present / total * 100
+        )
+      : 0;
+
+
+  el.statTotal.textContent =
+    total;
+
+  el.statPresent.textContent =
+    present;
+
+  el.statAbsent.textContent =
+    absent;
+
+  el.statRate.textContent =
+    rate + '%';
+
+
+  el.showingCount.textContent =
+    `Showing ${filtered.length} of ${total}`;
+
+
+  if(!filtered.length){
+
+    el.studentGrid.innerHTML = `
+
+      <div style="
+        grid-column:1/-1;
+        text-align:center;
+        padding:50px 20px;
+        color:var(--text-muted);
+      ">
+
+        <div style="font-size:45px">
+          👨‍🎓
+        </div>
+
+        <div style="
+          font-weight:bold;
+          margin-top:10px;
+          color:var(--text-secondary);
+        ">
+          ${
+            total
+              ? 'No students match your search.'
+              : 'No students enrolled yet.'
+          }
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  const fragment =
+    document.createDocumentFragment();
+
+
+  filtered.forEach(student => {
+
+    const attendance =
+      state.attendance[
+        student.rfid_uid
+      ];
+
+
+    const present =
+      !!attendance;
+
+
+    const card =
+      document.createElement('div');
+
+
+    card.className =
+      'student-card ' +
+      (
+        present
+          ? 'present-card'
+          : 'absent-card'
+      );
+
+
+    const status =
+      !present
+        ? 'Absent'
+        : attendance.outTime
+          ? 'Timed Out'
+          : 'Present';
+
+
+    const inTime =
+      attendance
+        ? formatTime(
+            attendance.inTime
+          )
+        : '--:-- --';
+
+
+    const outTime =
+      attendance
+        ? formatTime(
+            attendance.outTime
+          )
+        : '--:-- --';
+
+
+    card.innerHTML = `
+
+      <div class="student-card-header">
+
+        <div class="student-avatar">
+          ${esc(initials(student.full_name))}
+        </div>
+
+        <div class="student-info">
+
+          <div
+            class="student-name"
+            title="${esc(student.full_name)}"
+          >
+            ${esc(student.full_name)}
+          </div>
+
+          <div class="student-id">
+            ${esc(student.student_id_number)}
+          </div>
+
+        </div>
+
+        <span class="
+          status-badge
+          ${
+            present
+              ? 'badge-present'
+              : 'badge-absent'
+          }
+        ">
+          ${status}
+        </span>
+
+      </div>
+
+
+      ${
+        student.course_section
+          ? `
+            <div class="student-section">
+              🎓
+              ${esc(student.course_section)}
+            </div>
+          `
+          : ''
+      }
+
+
+      <div class="student-times">
+
+        <div>
+
+          <div class="time-block-label">
+            Time In
+          </div>
+
+          <div class="time-block-val">
+            ${inTime}
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="time-block-label">
+            Time Out
+          </div>
+
+          <div class="time-block-val">
+            ${outTime}
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="delete-student"
+        data-id="${student.id}"
+        data-name="${esc(student.full_name)}"
+      >
+        Delete Student
+      </button>
+
+    `;
+
+
+    card
+      .querySelector('.delete-student')
+      .addEventListener(
+        'click',
+        () =>
+          deleteStudent(
+            student.id,
+            student.full_name
+          )
+      );
+
+
+    fragment.appendChild(card);
+
+  });
+
+
+  el.studentGrid.innerHTML = '';
+
+  el.studentGrid.appendChild(
+    fragment
+  );
 
 }
 
 
-/* =========================================================
-   STATS
-========================================================= */
+/* ============================================================
+   DELETE STUDENT
+   ============================================================ */
 
-function updateStats(){
+async function deleteStudent(
+  id,
+  name
+){
 
-    let present = 0;
-
-    let timeout = 0;
-
-    let absent = 0;
-
-
-    state.students.forEach(
-        student => {
-
-            const uid =
-                String(
-                    student.rfid_uid || ''
-                ).trim().toUpperCase();
-
-            const record =
-                state.attendance[uid];
-
-
-            if(!record){
-
-                absent++;
-
-            }else if(
-                record.status === 'timeout'
-            ){
-
-                timeout++;
-
-            }else{
-
-                present++;
-
-            }
-
-        }
+  const confirmed =
+    confirm(
+      `Delete "${name}" from the student list?\n\nThis action cannot be undone.`
     );
 
 
-    document.getElementById(
-        'totalStudents'
-    ).textContent =
-        state.students.length;
+  if(!confirmed)
+    return;
 
 
-    document.getElementById(
-        'presentStudents'
-    ).textContent =
-        present;
+  const {
+    error
+  } =
+    await sb
+      .from('students')
+      .delete()
+      .eq('id',id);
 
 
-    document.getElementById(
-        'absentStudents'
-    ).textContent =
-        absent;
+  if(error){
 
-
-    document.getElementById(
-        'timeoutStudents'
-    ).textContent =
-        timeout;
-
-}
-
-
-/* =========================================================
-   SEARCH / FILTER
-========================================================= */
-
-function handleSearch(){
-
-    state.searchQ =
-        document.getElementById(
-            'searchInput'
-        ).value.trim();
-
-    renderGrid();
-
-}
-
-
-function setFilter(filter){
-
-    state.filter =
-        filter;
-
-
-    document
-        .querySelectorAll('.filter-btn')
-        .forEach(
-            button => {
-
-                button.classList.remove(
-                    'active'
-                );
-
-            }
-        );
-
-
-    const button =
-        document.getElementById(
-            filter === 'all'
-            ? 'filterAll'
-            : filter === 'present'
-            ? 'filterPresent'
-            : filter === 'absent'
-            ? 'filterAbsent'
-            : 'filterTimeout'
-        );
-
-
-    if(button){
-
-        button.classList.add(
-            'active'
-        );
-
-    }
-
-
-    renderGrid();
-
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
-
-async function changeDate(){
-
-    const date =
-        document.getElementById(
-            'attendanceDate'
-        ).value;
-
-    if(!date) return;
-
-    state.attendanceDate =
-        date;
-
-    updateDateLabel();
-
-    await loadAttendance(
-        date
+    toast(
+      'Failed to delete student: ' +
+      error.message,
+      'error'
     );
 
+    return;
+
+  }
+
+
+  state.students =
+    state.students.filter(
+      student =>
+        student.id !== id
+    );
+
+
+  renderGrid();
+
+
+  toast(
+    `${name} deleted successfully.`,
+    'success'
+  );
+
 }
 
 
-function updateDateLabel(){
-
-    if(!state.attendanceDate)
-        return;
-
-    document.getElementById(
-        'selectedDateLabel'
-    ).textContent =
-        formatDateLong(
-            state.attendanceDate
-        );
-
-}
-
-
-/* =========================================================
+/* ============================================================
    ADD STUDENT
-========================================================= */
+   ============================================================ */
 
-function openAddStudent(){
+function openModal(){
 
-    document.getElementById(
-        'studentModal'
-    ).style.display = 'flex';
+  el.inpSid.value = '';
+
+  el.inpName.value = '';
+
+  el.inpUid.value = '';
+
+  el.inpSection.value = '';
+
+  el.scanStatus.textContent = '';
+
+  el.modalOverlay.classList.add(
+    'open'
+  );
+
+  el.inpSid.focus();
 
 }
 
 
-function closeAddStudent(){
+function closeModal(){
 
-    document.getElementById(
-        'studentModal'
-    ).style.display = 'none';
+  stopRFIDScan();
+
+  el.modalOverlay.classList.remove(
+    'open'
+  );
 
 }
 
 
 async function saveStudent(){
 
-    const studentID =
-        document.getElementById(
-            'studentID'
-        ).value.trim();
+  const studentId =
+    el.inpSid.value.trim();
 
-    const rfid =
-        document.getElementById(
-            'studentRFID'
-        ).value.trim();
+  const name =
+    el.inpName.value.trim();
 
-    const name =
-        document.getElementById(
-            'studentName'
-        ).value.trim();
+  const uid =
+    el.inpUid.value
+      .replace(
+        /[^0-9a-fA-F]/g,
+        ''
+      )
+      .toUpperCase();
 
-    const section =
-        document.getElementById(
-            'studentSection'
-        ).value.trim();
+  const section =
+    el.inpSection.value.trim();
 
 
-    if(
-        !studentID ||
-        !rfid ||
-        !name ||
-        !section
-    ){
+  if(
+    !studentId ||
+    !name ||
+    !uid
+  ){
 
-        showToast(
-            'Please complete all fields'
-        );
-
-        return;
-
-    }
-
-
-    const {
-        error
-    } = await sb
-        .from('students')
-        .insert({
-
-            student_id_number:
-                studentID,
-
-            full_name:
-                name,
-
-            rfid_uid:
-                rfid,
-
-            course_section:
-                section
-
-        });
-
-
-    if(error){
-
-        console.error(error);
-
-        showToast(
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    document.getElementById(
-        'studentID'
-    ).value = '';
-
-    document.getElementById(
-        'studentRFID'
-    ).value = '';
-
-    document.getElementById(
-        'studentName'
-    ).value = '';
-
-    document.getElementById(
-        'studentSection'
-    ).value = '';
-
-
-    closeAddStudent();
-
-    await loadStudents();
-
-    showToast(
-        'Student added successfully'
+    toast(
+      'Please complete all required fields.',
+      'error'
     );
 
-}
+    return;
 
+  }
 
-/* =========================================================
-   DELETE STUDENT
-========================================================= */
 
-async function deleteStudent(id){
+  el.modalSaveBtn.disabled =
+    true;
 
-    const student =
-        state.students.find(
-            s => String(s.id) === String(id)
-        );
+  el.modalSaveBtn.textContent =
+    'Saving...';
 
 
-    if(!student) return;
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from('students')
+      .insert({
 
+        student_id_number:
+          studentId,
 
-    const confirmed =
-        confirm(
-            `Delete ${student.full_name}?\n\nThis will remove the student from the student list.`
-        );
+        full_name:
+          name,
 
+        rfid_uid:
+          uid,
 
-    if(!confirmed) return;
+        course_section:
+          section || null
 
+      })
+      .select()
+      .single();
 
-    const {
-        error
-    } = await sb
-        .from('students')
-        .delete()
-        .eq(
-            'id',
-            id
-        );
 
+  el.modalSaveBtn.disabled =
+    false;
 
-    if(error){
+  el.modalSaveBtn.textContent =
+    'Save Student';
 
-        console.error(error);
 
-        showToast(
-            error.message
-        );
+  if(error){
 
-        return;
+    if(error.code === '23505'){
 
-    }
-
-
-    state.students =
-        state.students.filter(
-            s => String(s.id) !== String(id)
-        );
-
-
-    renderGrid();
-
-    showToast(
-        'Student deleted successfully'
-    );
-
-}
-
-
-/* =========================================================
-   RECENT SCANS
-========================================================= */
-
-async function loadRecentScans(){
-
-    const {
-        data,
-        error
-    } = await sb
-        .from('attendance_records')
-        .select('*')
-        .order(
-            'timestamp',
-            {
-                ascending:false
-            }
-        )
-        .limit(10);
-
-
-    if(error){
-
-        console.error(error);
-
-        return;
-
-    }
-
-
-    state.scanHistory =
-        data || [];
-
-    renderRecentScans();
-
-
-    if(
-        state.scanHistory.length
-    ){
-
-        displayLatestScan(
-            state.scanHistory[0]
-        );
-
-    }
-
-}
-
-
-function renderRecentScans(){
-
-    const list =
-        document.getElementById(
-            'scanList'
-        );
-
-
-    if(
-        !state.scanHistory.length
-    ){
-
-        list.innerHTML =
-            `<div class="empty">
-                No recent scans
-            </div>`;
-
-        return;
-
-    }
-
-
-    list.innerHTML =
-        state.scanHistory.map(
-            scan => {
-
-                const student =
-                    state.students.find(
-                        s =>
-                            String(
-                                s.rfid_uid || ''
-                            )
-                            .trim()
-                            .toUpperCase()
-                            ===
-                            String(
-                                scan.scanned_rfid || ''
-                            )
-                            .trim()
-                            .toUpperCase()
-                    );
-
-
-                return `
-
-                    <div class="scan-item">
-
-                        <strong>
-                            ${
-                                student
-                                ? escapeHTML(
-                                    student.full_name
-                                )
-                                : 'Unknown RFID'
-                            }
-                        </strong>
-
-                        <small>
-                            ${
-                                formatTime(
-                                    scan.timestamp
-                                )
-                            }
-                            •
-                            ${
-                                escapeHTML(
-                                    scan.status || 'Scan'
-                                )
-                            }
-                        </small>
-
-                    </div>
-
-                `;
-
-            }
-        ).join('');
-
-}
-
-
-function displayLatestScan(scan){
-
-    if(!scan) return;
-
-
-    const student =
-        state.students.find(
-            s =>
-                String(
-                    s.rfid_uid || ''
-                )
-                .trim()
-                .toUpperCase()
-                ===
-                String(
-                    scan.scanned_rfid || ''
-                )
-                .trim()
-                .toUpperCase()
-        );
-
-
-    const box =
-        document.getElementById(
-            'latestScan'
-        );
-
-
-    if(student){
-
-        box.innerHTML = `
-
-            <div class="scan-icon">
-                ✓
-            </div>
-
-            <div class="latest-name">
-                ${escapeHTML(
-                    student.full_name
-                )}
-            </div>
-
-            <div class="latest-info">
-                ${escapeHTML(
-                    student.student_id_number || ''
-                )}
-                <br>
-                ${formatTime(
-                    scan.timestamp
-                )}
-                <br>
-                ${escapeHTML(
-                    scan.status || 'Scan'
-                )}
-            </div>
-
-        `;
+      toast(
+        'Student ID or RFID UID already exists.',
+        'error'
+      );
 
     }else{
 
-        box.innerHTML = `
-
-            <div class="scan-icon">
-                ?
-            </div>
-
-            <div class="latest-name">
-                Unknown RFID
-            </div>
-
-            <div class="latest-info">
-                UID:
-                ${escapeHTML(
-                    scan.scanned_rfid || ''
-                )}
-                <br>
-                ${formatTime(
-                    scan.timestamp
-                )}
-            </div>
-
-        `;
+      toast(
+        'Error saving student: ' +
+        error.message,
+        'error'
+      );
 
     }
+
+    return;
+
+  }
+
+
+  state.students.push(data);
+
+
+  state.students.sort(
+    (a,b) =>
+      String(
+        a.student_id_number
+      ).localeCompare(
+        String(
+          b.student_id_number
+        ),
+        undefined,
+        {
+          numeric:true
+        }
+      )
+  );
+
+
+  closeModal();
+
+  renderGrid();
+
+
+  toast(
+    `${name} added successfully.`,
+    'success'
+  );
 
 }
 
 
-/* =========================================================
-   REALTIME
-========================================================= */
+/* ============================================================
+   RFID REGISTRATION SCAN
+   ============================================================ */
 
-function setupRealtime(){
+function startRFIDScan(){
 
-    if(state.mainChannel){
+  if(state.scanChannel){
 
-        sb.removeChannel(
-            state.mainChannel
+    stopRFIDScan();
+
+    return;
+
+  }
+
+
+  el.scanStatus.textContent =
+    'Tap the RFID card now...';
+
+  el.scanStatus.className =
+    'scan-status-text detecting';
+
+
+  el.scanUidBtn.textContent =
+    'Cancel';
+
+
+  state.scanChannel =
+    sb.channel(
+      'rfid_registration'
+    );
+
+
+  state.scanChannel
+    .on(
+      'postgres_changes',
+      {
+        event:'INSERT',
+        schema:'public',
+        table:'unregistered_scans'
+      },
+      payload => {
+
+        const uid =
+          String(
+            payload.new.rfid_uid || ''
+          )
+          .replace(
+            /[^0-9a-fA-F]/g,
+            ''
+          )
+          .toUpperCase();
+
+
+        if(!uid)
+          return;
+
+
+        el.inpUid.value =
+          uid;
+
+
+        el.scanStatus.textContent =
+          `Card detected: ${uid}`;
+
+        el.scanStatus.className =
+          'scan-status-text detected';
+
+
+        toast(
+          'RFID card detected.',
+          'success'
         );
 
-    }
+
+        stopRFIDScan();
+
+      }
+    )
+    .subscribe();
 
 
-    state.mainChannel =
-        sb
-        .channel(
-            'attendance-realtime'
-        )
-        .on(
-            'postgres_changes',
-            {
-                event:'INSERT',
-                schema:'public',
-                table:'attendance_records'
-            },
-            async payload => {
+  state.scanTimer =
+    setTimeout(
+      () => {
 
-                const record =
-                    payload.new;
+        if(state.scanChannel){
 
+          el.scanStatus.textContent =
+            'No card detected.';
 
-                const recordDate =
-                    new Intl.DateTimeFormat(
-                        'en-CA',
-                        {
-                            timeZone:TIMEZONE,
-                            year:'numeric',
-                            month:'2-digit',
-                            day:'2-digit'
-                        }
-                    ).format(
-                        new Date(
-                            record.timestamp
-                        )
-                    );
+          el.scanStatus.className =
+            'scan-status-text failed';
 
+          stopRFIDScan();
 
-                if(
-                    recordDate ===
-                    state.attendanceDate
-                ){
+        }
 
-                    await loadAttendance(
-                        state.attendanceDate
-                    );
-
-                }
-
-
-                state.scanHistory.unshift(
-                    record
-                );
-
-                state.scanHistory =
-                    state.scanHistory.slice(
-                        0,
-                        10
-                    );
-
-
-                displayLatestScan(
-                    record
-                );
-
-                renderRecentScans();
-
-                showToast(
-                    'New RFID scan received'
-                );
-
-            }
-        )
-        .subscribe();
-
-
-    if(state.scanChannel){
-
-        sb.removeChannel(
-            state.scanChannel
-        );
-
-    }
-
-
-    state.scanChannel =
-        sb
-        .channel(
-            'unregistered-rfid-realtime'
-        )
-        .on(
-            'postgres_changes',
-            {
-                event:'INSERT',
-                schema:'public',
-                table:'unregistered_scans'
-            },
-            payload => {
-
-                const scan =
-                    payload.new;
-
-                showToast(
-                    `Unknown RFID detected: ${
-                        scan.rfid_uid || ''
-                    }`
-                );
-
-            }
-        )
-        .subscribe();
+      },
+      30000
+    );
 
 }
 
 
-/* =========================================================
-   IMPROVED PDF REPORT
-========================================================= */
+async function stopRFIDScan(){
 
-async function printPDF(){
+  clearTimeout(
+    state.scanTimer
+  );
+
+
+  if(state.scanChannel){
 
     try{
 
-        if(
-            !window.jspdf ||
-            !window.jspdf.jsPDF
-        ){
+      await state.scanChannel.unsubscribe();
 
-            showToast(
-                'PDF library is not loaded.'
-            );
+    }catch(e){}
 
-            return;
+    state.scanChannel =
+      null;
+
+  }
+
+
+  el.scanUidBtn.innerHTML =
+    '💳 Scan ID';
+
+}
+
+
+/* ============================================================
+   REALTIME ATTENDANCE
+   ============================================================ */
+
+function subscribeAttendance(){
+
+  if(state.mainChannel){
+
+    try{
+      state.mainChannel.unsubscribe();
+    }catch(e){}
+
+  }
+
+
+  connectionStatus(
+    'connecting'
+  );
+
+
+  state.mainChannel =
+    sb.channel(
+      'attendance_live'
+    );
+
+
+  state.mainChannel
+    .on(
+      'postgres_changes',
+      {
+        event:'INSERT',
+        schema:'public',
+        table:'attendance_records'
+      },
+      handleAttendance
+    )
+    .subscribe(
+      status => {
+
+        if(status === 'SUBSCRIBED'){
+
+          connectionStatus(
+            'live'
+          );
 
         }
 
+        else if(
+          status === 'CHANNEL_ERROR'
+          ||
+          status === 'CLOSED'
+        ){
 
-        const {
-            jsPDF
-        } = window.jspdf;
+          connectionStatus(
+            'error'
+          );
 
+        }
 
-        const date =
-            state.attendanceDate ||
-            todayManila();
+      }
+    );
 
-
-        /* ---------------------------------------------
-           GET ATTENDANCE FOR SELECTED DATE
-        --------------------------------------------- */
-
-        const start =
-            `${date}T00:00:00+08:00`;
-
-        const end =
-            `${date}T23:59:59+08:00`;
+}
 
 
-        const {
-            data,
-            error
-        } = await sb
-            .from('attendance_records')
-            .select('*')
-            .gte(
-                'timestamp',
-                start
+/* ============================================================
+   HANDLE NEW ATTENDANCE
+   ============================================================ */
+
+async function handleAttendance(
+  payload
+){
+
+  const row =
+    payload.new;
+
+
+  if(!row)
+    return;
+
+
+  const rowDate =
+    new Date(
+      row.timestamp
+    ).toLocaleDateString(
+      'en-CA',
+      {
+        timeZone:TIMEZONE
+      }
+    );
+
+
+  if(
+    rowDate !==
+    state.attendanceDate
+  )
+    return;
+
+
+  await loadAttendance(
+    state.attendanceDate
+  );
+
+
+  const student =
+    state.students.find(
+      s =>
+        s.rfid_uid ===
+        row.scanned_rfid
+    );
+
+
+  const status =
+    String(
+      row.status || ''
+    )
+    .toLowerCase()
+    .trim();
+
+
+  let type =
+    'unknown';
+
+
+  if(status === 'present')
+    type = 'present';
+
+
+  if(
+    status === 'time out' ||
+    status === 'timeout'
+  )
+    type = 'timeout';
+
+
+  const scan = {
+
+    type,
+
+    name:
+      student
+        ? student.full_name
+        : 'Unknown Card',
+
+    uid:
+      row.scanned_rfid,
+
+    studentId:
+      student
+        ? student.student_id_number
+        : '',
+
+    section:
+      student
+        ? student.course_section
+        : '',
+
+    timeLabel:
+      formatTime(
+        row.timestamp
+      )
+
+  };
+
+
+  state.scanHistory.unshift(
+    scan
+  );
+
+
+  if(
+    state.scanHistory.length >
+    MAX_HISTORY
+  ){
+
+    state.scanHistory.pop();
+
+  }
+
+
+  renderScanHero(
+    scan
+  );
+
+  renderHistory();
+
+}
+
+
+/* ============================================================
+   SCAN HERO
+   ============================================================ */
+
+function renderScanHero(
+  scan
+){
+
+  if(!scan){
+
+    el.scanContent.innerHTML = `
+
+      <div class="scan-idle">
+
+        <div
+          class="scan-idle-icon"
+          style="font-size:38px"
+        >
+          💳
+        </div>
+
+        <div class="scan-idle-text">
+          Waiting for card tap...
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  let pillClass =
+    'pill-unknown';
+
+  let text =
+    'Not Registered';
+
+
+  if(scan.type === 'present'){
+
+    pillClass =
+      'pill-present';
+
+    text =
+      'Present - Time In';
+
+  }
+
+
+  if(scan.type === 'timeout'){
+
+    pillClass =
+      'pill-timeout';
+
+    text =
+      'Time Out';
+
+  }
+
+
+  el.scanContent.innerHTML = `
+
+    <div>
+
+      <div class="scan-name">
+        ${esc(scan.name)}
+      </div>
+
+      <div class="scan-meta">
+
+        ${
+          scan.type === 'unknown'
+            ? `UID: ${esc(scan.uid)}`
+            : `${esc(scan.studentId)} • ${esc(scan.section || 'No section')}`
+        }
+
+      </div>
+
+      <span class="scan-pill ${pillClass}">
+        ${text}
+      </span>
+
+      <div class="scan-time-label">
+        ${esc(scan.timeLabel)}
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+function renderHistory(){
+
+  if(!state.scanHistory.length){
+
+    el.historyList.innerHTML =
+      `<div class="history-empty">
+        No scans this session
+      </div>`;
+
+    return;
+
+  }
+
+
+  el.historyList.innerHTML =
+    state.scanHistory
+      .map(scan => {
+
+        const dot =
+          scan.type === 'present'
+            ? 'dot-present'
+            : scan.type === 'timeout'
+              ? 'dot-timeout'
+              : 'dot-unknown';
+
+
+        const badge =
+          scan.type === 'present'
+            ? 'IN'
+            : scan.type === 'timeout'
+              ? 'OUT'
+              : 'N/A';
+
+
+        const badgeClass =
+          scan.type === 'present'
+            ? 'hb-present'
+            : scan.type === 'timeout'
+              ? 'hb-timeout'
+              : 'hb-unknown';
+
+
+        return `
+
+          <div class="history-item">
+
+            <div class="
+              history-dot
+              ${dot}
+            "></div>
+
+            <div class="history-info">
+
+              <div class="history-name">
+                ${esc(scan.name)}
+              </div>
+
+              <div class="history-time">
+                ${esc(scan.timeLabel)}
+              </div>
+
+            </div>
+
+            <div class="
+              history-badge
+              ${badgeClass}
+            ">
+              ${badge}
+            </div>
+
+          </div>
+
+        `;
+
+      })
+      .join('');
+
+}
+
+
+/* ============================================================
+   FILTER
+   ============================================================ */
+
+function setFilter(
+  filter
+){
+
+  state.filter =
+    filter;
+
+
+  document
+    .querySelectorAll('.chip')
+    .forEach(button => {
+
+      button.classList.toggle(
+        'active',
+        button.dataset.filter ===
+        filter
+      );
+
+    });
+
+
+  renderGrid();
+
+}
+
+
+/* ============================================================
+   REFRESH
+   ============================================================ */
+
+async function refresh(){
+
+  el.refreshBtn.disabled =
+    true;
+
+  el.refreshBtn.textContent =
+    'Loading...';
+
+
+  await loadStudents();
+
+  await loadAttendance(
+    state.attendanceDate ||
+    manilaDate()
+  );
+
+
+  el.refreshBtn.disabled =
+    false;
+
+  el.refreshBtn.textContent =
+    '↻ Refresh';
+
+}
+
+
+/* ============================================================
+   PDF REPORT
+   ============================================================ */
+
+async function printPDF(){
+
+  const date =
+    el.printDate.value;
+
+  if(!date){
+
+    toast(
+      'Please select a date.',
+      'error'
+    );
+
+    return;
+
+  }
+
+  el.printBtn.disabled =
+    true;
+
+  el.printBtn.textContent =
+    'Creating PDF...';
+
+  try{
+
+    const start =
+      `${date}T00:00:00+08:00`;
+
+    const end =
+      `${date}T23:59:59+08:00`;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from('attendance_records')
+        .select('*')
+        .gte('timestamp',start)
+        .lte('timestamp',end)
+        .order(
+          'timestamp',
+          {
+            ascending:true
+          }
+        );
+
+
+    if(error)
+      throw error;
+
+
+    const attendance = {};
+
+
+    (data || []).forEach(row => {
+
+      const uid =
+        String(
+          row.scanned_rfid || ''
+        )
+        .trim()
+        .toUpperCase();
+
+
+      if(!uid)
+        return;
+
+
+      const status =
+        String(
+          row.status || ''
+        )
+        .toLowerCase()
+        .trim();
+
+
+      if(!attendance[uid]){
+
+        attendance[uid] = {
+
+          inTime:null,
+
+          outTime:null
+
+        };
+
+      }
+
+
+      if(
+        status === 'present' &&
+        !attendance[uid].inTime
+      ){
+
+        attendance[uid].inTime =
+          row.timestamp;
+
+      }
+
+
+      if(
+        status === 'time out' ||
+        status === 'timeout' ||
+        status === 'timed out'
+      ){
+
+        attendance[uid].outTime =
+          row.timestamp;
+
+      }
+
+    });
+
+
+    let present = 0;
+    let timedOut = 0;
+    let absent = 0;
+
+
+    const rows =
+      state.students.map(
+        (student,index) => {
+
+          const studentUID =
+            String(
+              student.rfid_uid || ''
             )
-            .lte(
-                'timestamp',
-                end
-            )
-            .order(
-                'timestamp',
-                {
-                    ascending:true
-                }
-            );
+            .trim()
+            .toUpperCase();
 
 
-        if(error){
+          const att =
+            attendance[studentUID];
 
-            console.error(error);
 
-            showToast(
-                'Unable to load attendance records.'
-            );
+          let status =
+            'Absent';
 
-            return;
+
+          if(att){
+
+            if(att.outTime){
+
+              status =
+                'Timed Out';
+
+              timedOut++;
+
+            }else{
+
+              status =
+                'Present';
+
+              present++;
+
+            }
+
+          }else{
+
+            absent++;
+
+          }
+
+
+          return [
+
+            index + 1,
+
+            student.student_id_number ||
+              '--',
+
+            student.full_name ||
+              '--',
+
+            student.course_section ||
+              '--',
+
+            status,
+
+            att && att.inTime
+              ? formatTime(att.inTime)
+              : '--',
+
+            att && att.outTime
+              ? formatTime(att.outTime)
+              : '--'
+
+          ];
 
         }
+      );
 
 
-        /* ---------------------------------------------
-           PROCESS ATTENDANCE
-        --------------------------------------------- */
+    if(
+      !window.jspdf ||
+      !window.jspdf.jsPDF
+    ){
 
-        const attendance = {};
-
-
-        (data || []).forEach(
-            record => {
-
-                const uid =
-                    String(
-                        record.scanned_rfid || ''
-                    )
-                    .trim()
-                    .toUpperCase();
-
-
-                if(!uid) return;
-
-
-                if(!attendance[uid]){
-
-                    attendance[uid] = {
-
-                        inTime:null,
-
-                        outTime:null,
-
-                        status:'Present'
-
-                    };
-
-                }
-
-
-                const status =
-                    String(
-                        record.status || ''
-                    )
-                    .toLowerCase();
-
-
-                if(
-                    status === 'time out' ||
-                    status === 'timeout' ||
-                    status === 'out'
-                ){
-
-                    attendance[uid].outTime =
-                        record.timestamp;
-
-                    attendance[uid].status =
-                        'Timed Out';
-
-                }else{
-
-                    if(
-                        !attendance[uid].inTime
-                    ){
-
-                        attendance[uid].inTime =
-                            record.timestamp;
-
-                    }
-
-                    attendance[uid].status =
-                        'Present';
-
-                }
-
-            }
-        );
-
-
-        /* ---------------------------------------------
-           SUMMARY
-        --------------------------------------------- */
-
-        const total =
-            state.students.length;
-
-
-        let present = 0;
-
-        let timedOut = 0;
-
-        let absent = 0;
-
-
-        state.students.forEach(
-            student => {
-
-                const uid =
-                    String(
-                        student.rfid_uid || ''
-                    )
-                    .trim()
-                    .toUpperCase();
-
-
-                const record =
-                    attendance[uid];
-
-
-                if(!record){
-
-                    absent++;
-
-                }else if(
-                    record.status ===
-                    'Timed Out'
-                ){
-
-                    timedOut++;
-
-                }else{
-
-                    present++;
-
-                }
-
-            }
-        );
-
-
-        const attendanceRate =
-            total > 0
-            ? Math.round(
-                (
-                    (present + timedOut)
-                    / total
-                ) * 100
-            )
-            : 0;
-
-
-        /* ---------------------------------------------
-           CREATE PDF
-        --------------------------------------------- */
-
-        const doc =
-            new jsPDF({
-                orientation:'landscape',
-                unit:'mm',
-                format:'a4'
-            });
-
-
-        const pageWidth =
-            doc.internal.pageSize.getWidth();
-
-        const pageHeight =
-            doc.internal.pageSize.getHeight();
-
-
-        /* ---------------------------------------------
-           COLORS
-        --------------------------------------------- */
-
-        const MAROON =
-            [113,31,37];
-
-        const DARK =
-            [75,18,23];
-
-        const GOLD =
-            [213,162,58];
-
-        const LIGHT_GOLD =
-            [255,248,225];
-
-        const GRAY =
-            [100,100,100];
-
-        const LIGHT_GRAY =
-            [245,245,245];
-
-        const GREEN =
-            [21,128,61];
-
-        const RED =
-            [220,38,38];
-
-        const BLUE =
-            [37,99,235];
-
-
-        /* ---------------------------------------------
-           HEADER
-        --------------------------------------------- */
-
-        doc.setFillColor(
-            ...MAROON
-        );
-
-        doc.rect(
-            0,
-            0,
-            pageWidth,
-            37,
-            'F'
-        );
-
-
-        doc.setFillColor(
-            ...GOLD
-        );
-
-        doc.rect(
-            0,
-            36,
-            pageWidth,
-            1.5,
-            'F'
-        );
-
-
-        /* ---------------------------------------------
-           LOGO
-        --------------------------------------------- */
-
-        let logoAdded = false;
-
-
-        try{
-
-            const img =
-                document.querySelector(
-                    '.header-logo-wrap img'
-                );
-
-
-            if(img && img.complete){
-
-                const canvas =
-                    document.createElement(
-                        'canvas'
-                    );
-
-                canvas.width =
-                    img.naturalWidth || 100;
-
-                canvas.height =
-                    img.naturalHeight || 100;
-
-
-                const ctx =
-                    canvas.getContext(
-                        '2d'
-                    );
-
-
-                ctx.drawImage(
-                    img,
-                    0,
-                    0
-                );
-
-
-                const logo =
-                    canvas.toDataURL(
-                        'image/png'
-                    );
-
-
-                doc.addImage(
-                    logo,
-                    'PNG',
-                    14,
-                    7,
-                    23,
-                    23
-                );
-
-                logoAdded = true;
-
-            }
-
-        }catch(e){
-
-            console.log(
-                'Logo could not be added:',
-                e
-            );
-
-        }
-
-
-        if(!logoAdded){
-
-            doc.setFillColor(
-                255,
-                255,
-                255
-            );
-
-            doc.circle(
-                25,
-                18,
-                11,
-                'F'
-            );
-
-
-            doc.setTextColor(
-                ...MAROON
-            );
-
-            doc.setFont(
-                'helvetica',
-                'bold'
-            );
-
-            doc.setFontSize(
-                10
-            );
-
-            doc.text(
-                'GA',
-                25,
-                21,
-                {
-                    align:'center'
-                }
-            );
-
-        }
-
-
-        /* ---------------------------------------------
-           HEADER TEXT
-        --------------------------------------------- */
-
-        doc.setTextColor(
-            255,
-            255,
-            255
-        );
-
-        doc.setFont(
-            'helvetica',
-            'bold'
-        );
-
-        doc.setFontSize(
-            16
-        );
-
-        doc.text(
-            'GLOBAL ACADEMY',
-            43,
-            14
-        );
-
-
-        doc.setFontSize(
-            8.5
-        );
-
-        doc.setFont(
-            'helvetica',
-            'normal'
-        );
-
-        doc.text(
-            'SMART RFID ATTENDANCE SYSTEM',
-            43,
-            21
-        );
-
-
-        doc.setFont(
-            'helvetica',
-            'bold'
-        );
-
-        doc.setFontSize(
-            10
-        );
-
-        doc.text(
-            'OFFICIAL DAILY ATTENDANCE REPORT',
-            pageWidth - 14,
-            15,
-            {
-                align:'right'
-            }
-        );
-
-
-        doc.setFont(
-            'helvetica',
-            'normal'
-        );
-
-        doc.setFontSize(
-            8
-        );
-
-        doc.text(
-            'Report ID: GA-' +
-            date.replaceAll('-',''),
-            pageWidth - 14,
-            22,
-            {
-                align:'right'
-            }
-        );
-
-
-        /* ---------------------------------------------
-           REPORT INFO
-        --------------------------------------------- */
-
-        doc.setTextColor(
-            ...DARK
-        );
-
-        doc.setFont(
-            'helvetica',
-            'bold'
-        );
-
-        doc.setFontSize(
-            12
-        );
-
-        doc.text(
-            'Attendance Report',
-            14,
-            48
-        );
-
-
-        doc.setFont(
-            'helvetica',
-            'normal'
-        );
-
-        doc.setFontSize(
-            9
-        );
-
-        doc.setTextColor(
-            ...GRAY
-        );
-
-        doc.text(
-            formatDateLong(date),
-            14,
-            54
-        );
-
-
-        doc.text(
-            'Timezone: Asia/Manila',
-            14,
-            59
-        );
-
-
-        /* ---------------------------------------------
-           SUMMARY CARDS
-        --------------------------------------------- */
-
-        const cardY = 45;
-
-        const cardW = 54;
-
-        const cardH = 22;
-
-        const cardGap = 5;
-
-        const cardStart =
-            pageWidth -
-            4 * cardW -
-            3 * cardGap -
-            14;
-
-
-        const cards = [
-
-            {
-                title:'TOTAL STUDENTS',
-                value:total,
-                color:MAROON
-            },
-
-            {
-                title:'PRESENT',
-                value:present,
-                color:GREEN
-            },
-
-            {
-                title:'TIMED OUT',
-                value:timedOut,
-                color:BLUE
-            },
-
-            {
-                title:'ABSENT',
-                value:absent,
-                color:RED
-            }
-
-        ];
-
-
-        cards.forEach(
-            (card,index)=>{
-
-                const x =
-                    cardStart +
-                    index *
-                    (cardW + cardGap);
-
-
-                doc.setFillColor(
-                    248,
-                    248,
-                    248
-                );
-
-                doc.roundedRect(
-                    x,
-                    cardY,
-                    cardW,
-                    cardH,
-                    2,
-                    2,
-                    'F'
-                );
-
-
-                doc.setFillColor(
-                    ...card.color
-                );
-
-                doc.rect(
-                    x,
-                    cardY,
-                    2.5,
-                    cardH,
-                    'F'
-                );
-
-
-                doc.setTextColor(
-                    ...GRAY
-                );
-
-                doc.setFont(
-                    'helvetica',
-                    'bold'
-                );
-
-                doc.setFontSize(
-                    6.5
-                );
-
-                doc.text(
-                    card.title,
-                    x + 6,
-                    cardY + 7
-                );
-
-
-                doc.setTextColor(
-                    ...DARK
-                );
-
-                doc.setFontSize(
-                    14
-                );
-
-                doc.text(
-                    String(card.value),
-                    x + 6,
-                    cardY + 16
-                );
-
-            }
-        );
-
-
-        /* ---------------------------------------------
-           ATTENDANCE RATE
-        --------------------------------------------- */
-
-        doc.setFillColor(
-            ...LIGHT_GOLD
-        );
-
-        doc.roundedRect(
-            14,
-            65,
-            pageWidth - 28,
-            11,
-            2,
-            2,
-            'F'
-        );
-
-
-        doc.setTextColor(
-            ...DARK
-        );
-
-        doc.setFont(
-            'helvetica',
-            'bold'
-        );
-
-        doc.setFontSize(
-            8
-        );
-
-        doc.text(
-            'ATTENDANCE RATE',
-            19,
-            72
-        );
-
-
-        doc.setFontSize(
-            10
-        );
-
-        doc.text(
-            attendanceRate + '%',
-            pageWidth - 19,
-            72,
-            {
-                align:'right'
-            }
-        );
-
-
-        /* ---------------------------------------------
-           TABLE DATA
-        --------------------------------------------- */
-
-        const tableRows =
-            state.students.map(
-                (student,index)=>{
-
-                    const uid =
-                        String(
-                            student.rfid_uid || ''
-                        )
-                        .trim()
-                        .toUpperCase();
-
-
-                    const record =
-                        attendance[uid];
-
-
-                    let status =
-                        'Absent';
-
-
-                    let timeIn =
-                        '--';
-
-
-                    let timeOut =
-                        '--';
-
-
-                    if(record){
-
-                        status =
-                            record.status ||
-                            'Present';
-
-
-                        timeIn =
-                            formatTime(
-                                record.inTime
-                            );
-
-
-                        timeOut =
-                            formatTime(
-                                record.outTime
-                            );
-
-                    }
-
-
-                    return [
-
-                        index + 1,
-
-                        student.student_id_number ||
-                        '--',
-
-                        student.full_name ||
-                        '--',
-
-                        student.course_section ||
-                        '--',
-
-                        status,
-
-                        timeIn,
-
-                        timeOut
-
-                    ];
-
-                }
-            );
-
-
-        /* ---------------------------------------------
-           TABLE
-        --------------------------------------------- */
-
-        doc.autoTable({
-
-            startY:81,
-
-            margin:{
-                left:14,
-                right:14,
-                bottom:22
-            },
-
-            head:[[
-                'No.',
-                'Student ID',
-                'Full Name',
-                'Course / Section',
-                'Status',
-                'Time In',
-                'Time Out'
-            ]],
-
-            body:tableRows,
-
-            theme:'grid',
-
-            styles:{
-
-                font:'helvetica',
-
-                fontSize:8,
-
-                cellPadding:3,
-
-                lineColor:[
-                    220,
-                    220,
-                    220
-                ],
-
-                lineWidth:.2,
-
-                textColor:[
-                    45,
-                    45,
-                    45
-                ],
-
-                valign:'middle'
-
-            },
-
-            headStyles:{
-
-                fillColor:MAROON,
-
-                textColor:[
-                    255,
-                    255,
-                    255
-                ],
-
-                fontStyle:'bold',
-
-                halign:'center',
-
-                fontSize:8
-
-            },
-
-            alternateRowStyles:{
-
-                fillColor:[
-                    250,
-                    250,
-                    250
-                ]
-
-            },
-
-            columnStyles:{
-
-                0:{
-                    halign:'center',
-                    cellWidth:10
-                },
-
-                1:{
-                    cellWidth:28
-                },
-
-                2:{
-                    cellWidth:63
-                },
-
-                3:{
-                    cellWidth:47
-                },
-
-                4:{
-                    halign:'center',
-                    cellWidth:30
-                },
-
-                5:{
-                    halign:'center',
-                    cellWidth:31
-                },
-
-                6:{
-                    halign:'center',
-                    cellWidth:31
-                }
-
-            },
-
-
-            didParseCell:function(
-                hookData
-            ){
-
-                if(
-                    hookData.section ===
-                    'body'
-                    &&
-                    hookData.column.index === 4
-                ){
-
-                    const text =
-                        String(
-                            hookData.cell.text[0] ||
-                            ''
-                        ).toLowerCase();
-
-
-                    if(text === 'present'){
-
-                        hookData.cell.styles.textColor =
-                            GREEN;
-
-                        hookData.cell.styles.fontStyle =
-                            'bold';
-
-                    }
-
-
-                    if(text === 'absent'){
-
-                        hookData.cell.styles.textColor =
-                            RED;
-
-                        hookData.cell.styles.fontStyle =
-                            'bold';
-
-                    }
-
-
-                    if(
-                        text === 'timed out'
-                    ){
-
-                        hookData.cell.styles.textColor =
-                            BLUE;
-
-                        hookData.cell.styles.fontStyle =
-                            'bold';
-
-                    }
-
-                }
-
-            },
-
-
-            didDrawPage:function(){
-
-                const pageNumber =
-                    doc.internal.getNumberOfPages();
-
-
-                /* FOOTER */
-
-                doc.setDrawColor(
-                    ...GOLD
-                );
-
-                doc.setLineWidth(
-                    .5
-                );
-
-                doc.line(
-                    14,
-                    pageHeight - 16,
-                    pageWidth - 14,
-                    pageHeight - 16
-                );
-
-
-                doc.setFont(
-                    'helvetica',
-                    'normal'
-                );
-
-                doc.setFontSize(
-                    7
-                );
-
-                doc.setTextColor(
-                    ...GRAY
-                );
-
-
-                doc.text(
-                    'Global Academy • Smart RFID Attendance System',
-                    14,
-                    pageHeight - 10
-                );
-
-
-                const generated =
-                    new Intl.DateTimeFormat(
-                        'en-US',
-                        {
-                            timeZone:TIMEZONE,
-                            year:'numeric',
-                            month:'short',
-                            day:'numeric',
-                            hour:'2-digit',
-                            minute:'2-digit',
-                            hour12:true
-                        }
-                    ).format(
-                        new Date()
-                    );
-
-
-                doc.text(
-                    'Generated: ' + generated,
-                    pageWidth / 2,
-                    pageHeight - 10,
-                    {
-                        align:'center'
-                    }
-                );
-
-
-                doc.text(
-                    'Page ' +
-                    pageNumber,
-                    pageWidth - 14,
-                    pageHeight - 10,
-                    {
-                        align:'right'
-                    }
-                );
-
-            }
-
-        });
-
-
-        /* ---------------------------------------------
-           SIGNATURE AREA
-        --------------------------------------------- */
-
-        let finalY =
-            doc.lastAutoTable
-            ? doc.lastAutoTable.finalY + 15
-            : 100;
-
-
-        if(
-            finalY >
-            pageHeight - 45
-        ){
-
-            doc.addPage();
-
-            finalY = 30;
-
-        }
-
-
-        doc.setTextColor(
-            ...DARK
-        );
-
-        doc.setFont(
-            'helvetica',
-            'bold'
-        );
-
-        doc.setFontSize(
-            8
-        );
-
-        doc.text(
-            'Prepared by:',
-            35,
-            finalY
-        );
-
-        doc.text(
-            'Approved by:',
-            pageWidth - 105,
-            finalY
-        );
-
-
-        doc.setDrawColor(
-            80,
-            80,
-            80
-        );
-
-
-        doc.line(
-            25,
-            finalY + 15,
-            95,
-            finalY + 15
-        );
-
-
-        doc.line(
-            pageWidth - 115,
-            finalY + 15,
-            pageWidth - 45,
-            finalY + 15
-        );
-
-
-        doc.setFont(
-            'helvetica',
-            'normal'
-        );
-
-        doc.setFontSize(
-            7
-        );
-
-        doc.setTextColor(
-            ...GRAY
-        );
-
-
-        doc.text(
-            'Teacher / Adviser',
-            60,
-            finalY + 20,
-            {
-                align:'center'
-            }
-        );
-
-
-        doc.text(
-            'School Administrator',
-            pageWidth - 80,
-            finalY + 20,
-            {
-                align:'center'
-            }
-        );
-
-
-        /* ---------------------------------------------
-           NO RECORD NOTICE
-        --------------------------------------------- */
-
-        if(
-            state.students.length === 0
-        ){
-
-            doc.setFont(
-                'helvetica',
-                'bold'
-            );
-
-            doc.setFontSize(
-                12
-            );
-
-            doc.setTextColor(
-                ...RED
-            );
-
-            doc.text(
-                'No students registered.',
-                pageWidth / 2,
-                105,
-                {
-                    align:'center'
-                }
-            );
-
-        }
-
-
-        if(
-            state.students.length > 0 &&
-            (data || []).length === 0
-        ){
-
-            /*
-             * This is intentionally only a small note
-             * because the table already shows students
-             * as absent.
-             */
-
-            doc.setFont(
-                'helvetica',
-                'normal'
-            );
-
-            doc.setFontSize(
-                7
-            );
-
-            doc.setTextColor(
-                ...GRAY
-            );
-
-            doc.text(
-                'No RFID attendance scans were recorded for this date.',
-                14,
-                78
-            );
-
-        }
-
-
-        /* ---------------------------------------------
-           SAVE
-        --------------------------------------------- */
-
-        const filename =
-            `Global_Academy_Attendance_${date}.pdf`;
-
-
-        doc.save(
-            filename
-        );
-
-
-        showToast(
-            'PDF report generated successfully'
-        );
-
-
-    }catch(error){
-
-        console.error(
-            'PDF ERROR:',
-            error
-        );
-
-        showToast(
-            'Failed to generate PDF: ' +
-            error.message
-        );
+      throw new Error(
+        'PDF library did not load.'
+      );
 
     }
 
-}
+
+    if(
+      !window.jspdf.jsPDF.API.autoTable
+    ){
+
+      throw new Error(
+        'PDF table library did not load.'
+      );
+
+    }
 
 
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
+    const {
+      jsPDF
+    } =
+      window.jspdf;
 
-function escapeHTML(value){
 
-    return String(
-        value ?? ''
-    )
-    .replace(
-        /&/g,
-        '&amp;'
-    )
-    .replace(
-        /</g,
-        '&lt;'
-    )
-    .replace(
-        />/g,
-        '&gt;'
-    )
-    .replace(
-        /"/g,
-        '&quot;'
-    )
-    .replace(
-        /'/g,
-        '&#039;'
+    const doc =
+      new jsPDF({
+
+        orientation:'landscape',
+
+        unit:'mm',
+
+        format:'a4'
+
+      });
+
+
+    const pageWidth =
+      doc.internal.pageSize.getWidth();
+
+    const pageHeight =
+      doc.internal.pageSize.getHeight();
+
+
+    const selectedDate =
+      new Date(
+        `${date}T12:00:00+08:00`
+      );
+
+
+    const dateLabel =
+      formatDate(selectedDate);
+
+
+    /* ========================================================
+       HEADER
+       ======================================================== */
+
+    doc.setFillColor(
+      142,
+      0,
+      0
     );
 
-}
+    doc.rect(
+      0,
+      0,
+      pageWidth,
+      32,
+      'F'
+    );
 
 
-/* =========================================================
-   ENTER KEY LOGIN
-========================================================= */
+    doc.setFillColor(
+      212,
+      175,
+      55
+    );
 
-document
-    .getElementById('loginPassword')
-    .addEventListener(
-        'keydown',
-        function(event){
+    doc.rect(
+      0,
+      32,
+      pageWidth,
+      2,
+      'F'
+    );
+
+
+    /* ========================================================
+       LOGO
+       ======================================================== */
+
+    const logo =
+      document.querySelector(
+        '.header-logo'
+      );
+
+
+    if(
+      logo &&
+      logo.complete &&
+      logo.naturalWidth > 0
+    ){
+
+      try{
+
+        doc.addImage(
+          logo,
+          'PNG',
+          14,
+          5,
+          22,
+          22
+        );
+
+      }catch(e){
+
+        console.warn(
+          'Logo could not be added:',
+          e
+        );
+
+      }
+
+    }
+
+
+    /* ========================================================
+       SCHOOL NAME
+       ======================================================== */
+
+    const titleX =
+      logo &&
+      logo.complete &&
+      logo.naturalWidth > 0
+        ? 40
+        : 14;
+
+
+    doc.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    doc.setFontSize(
+      20
+    );
+
+    doc.setTextColor(
+      255,
+      255,
+      255
+    );
+
+    doc.text(
+      'GLOBAL ACADEMY',
+      titleX,
+      13
+    );
+
+
+    doc.setFontSize(
+      9
+    );
+
+    doc.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    doc.text(
+      'SMART RFID ATTENDANCE SYSTEM',
+      titleX,
+      20
+    );
+
+
+    doc.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    doc.setFontSize(
+      10
+    );
+
+    doc.text(
+      'DAILY ATTENDANCE REPORT',
+      titleX,
+      27
+    );
+
+
+    doc.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    doc.setFontSize(
+      9
+    );
+
+    doc.text(
+      dateLabel,
+      pageWidth - 14,
+      15,
+      {
+        align:'right'
+      }
+    );
+
+
+    doc.setFontSize(
+      7
+    );
+
+    doc.text(
+      'Asia/Manila',
+      pageWidth - 14,
+      21,
+      {
+        align:'right'
+      }
+    );
+
+
+    /* ========================================================
+       SUMMARY
+       ======================================================== */
+
+    const total =
+      state.students.length;
+
+
+    const attended =
+      present +
+      timedOut;
+
+
+    const rate =
+      total
+        ? Math.round(
+            attended /
+            total *
+            100
+          )
+        : 0;
+
+
+    const boxY = 40;
+    const boxH = 18;
+    const gap = 4;
+
+    const boxW =
+      (pageWidth - 28 - gap * 3) /
+      4;
+
+
+    const summary = [
+
+      ['TOTAL STUDENTS',total],
+
+      ['PRESENT',present],
+
+      ['TIMED OUT',timedOut],
+
+      ['ABSENT',absent]
+
+    ];
+
+
+    summary.forEach(
+      (item,index) => {
+
+        const x =
+          14 +
+          index *
+          (boxW + gap);
+
+
+        doc.setFillColor(
+          248,
+          248,
+          248
+        );
+
+        doc.roundedRect(
+          x,
+          boxY,
+          boxW,
+          boxH,
+          2,
+          2,
+          'F'
+        );
+
+
+        doc.setFont(
+          'helvetica',
+          'bold'
+        );
+
+        doc.setFontSize(
+          7
+        );
+
+        doc.setTextColor(
+          100,
+          100,
+          100
+        );
+
+        doc.text(
+          item[0],
+          x + 4,
+          boxY + 6
+        );
+
+
+        doc.setFontSize(
+          14
+        );
+
+        doc.setTextColor(
+          142,
+          0,
+          0
+        );
+
+        doc.text(
+          String(item[1]),
+          x + 4,
+          boxY + 14
+        );
+
+      }
+    );
+
+
+    doc.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    doc.setFontSize(
+      8
+    );
+
+    doc.setTextColor(
+      80,
+      80,
+      80
+    );
+
+    doc.text(
+      `Attendance Rate: ${rate}%`,
+      pageWidth - 14,
+      64,
+      {
+        align:'right'
+      }
+    );
+
+
+    /* ========================================================
+       TABLE
+       ======================================================== */
+
+    doc.autoTable({
+
+      startY:68,
+
+      margin:{
+        left:14,
+        right:14
+      },
+
+      head:[[
+        'No.',
+        'Student ID',
+        'Full Name',
+        'Course / Section',
+        'Status',
+        'Time In',
+        'Time Out'
+      ]],
+
+      body:rows,
+
+      theme:'grid',
+
+      styles:{
+
+        font:'helvetica',
+
+        fontSize:8,
+
+        cellPadding:2.5,
+
+        valign:'middle',
+
+        lineColor:[
+          220,
+          220,
+          220
+        ],
+
+        lineWidth:0.2
+
+      },
+
+      headStyles:{
+
+        fillColor:[
+          142,
+          0,
+          0
+        ],
+
+        textColor:[
+          255,
+          255,
+          255
+        ],
+
+        fontStyle:'bold',
+
+        halign:'center',
+
+        valign:'middle'
+
+      },
+
+      alternateRowStyles:{
+
+        fillColor:[
+          250,
+          245,
+          245
+        ]
+
+      },
+
+      columnStyles:{
+
+        0:{
+          halign:'center',
+          cellWidth:12
+        },
+
+        1:{
+          halign:'center',
+          cellWidth:30
+        },
+
+        2:{
+          cellWidth:65
+        },
+
+        3:{
+          cellWidth:48
+        },
+
+        4:{
+          halign:'center',
+          cellWidth:27
+        },
+
+        5:{
+          halign:'center',
+          cellWidth:28
+        },
+
+        6:{
+          halign:'center',
+          cellWidth:28
+        }
+
+      },
+
+      didParseCell:
+        function(cell){
+
+          if(
+            cell.section === 'body' &&
+            cell.column.index === 4
+          ){
 
             if(
-                event.key === 'Enter'
+              cell.cell.raw === 'Present'
             ){
 
-                login();
+              cell.cell.styles.textColor =
+                [26,122,74];
+
+              cell.cell.styles.fontStyle =
+                'bold';
 
             }
 
+
+            if(
+              cell.cell.raw === 'Absent'
+            ){
+
+              cell.cell.styles.textColor =
+                [120,120,120];
+
+              cell.cell.styles.fontStyle =
+                'bold';
+
+            }
+
+
+            if(
+              cell.cell.raw === 'Timed Out'
+            ){
+
+              cell.cell.styles.textColor =
+                [196,122,0];
+
+              cell.cell.styles.fontStyle =
+                'bold';
+
+            }
+
+          }
+
         }
+
+    });
+
+
+    /* ========================================================
+       FOOTER
+       ======================================================== */
+
+    const pageCount =
+      doc.internal.getNumberOfPages();
+
+
+    for(
+      let page = 1;
+      page <= pageCount;
+      page++
+    ){
+
+      doc.setPage(page);
+
+
+      doc.setDrawColor(
+        210,
+        210,
+        210
+      );
+
+
+      doc.line(
+        14,
+        pageHeight - 14,
+        pageWidth - 14,
+        pageHeight - 14
+      );
+
+
+      doc.setFont(
+        'helvetica',
+        'normal'
+      );
+
+      doc.setFontSize(
+        7
+      );
+
+      doc.setTextColor(
+        130,
+        130,
+        130
+      );
+
+
+      doc.text(
+        'Generated by Smart RFID Attendance System',
+        14,
+        pageHeight - 8
+      );
+
+
+      doc.text(
+        `Page ${page} of ${pageCount}`,
+        pageWidth - 14,
+        pageHeight - 8,
+        {
+          align:'right'
+        }
+      );
+
+    }
+
+
+    /* ========================================================
+       SAVE
+       ======================================================== */
+
+    const filename =
+      `Global_Academy_Attendance_${date}.pdf`;
+
+
+    doc.save(
+      filename
     );
 
 
-/* =========================================================
+    toast(
+      'PDF created successfully.',
+      'success'
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+
+    toast(
+      'Failed to create PDF: ' +
+      error.message,
+      'error'
+    );
+
+  }
+
+
+  el.printBtn.disabled =
+    false;
+
+
+  el.printBtn.textContent =
+    '🖨 Print PDF';
+
+}
+async function initializeApp(){
+
+  if(initialized)
+    return;
+
+
+  initialized =
+    true;
+
+
+  el.printDate.value =
+    manilaDate();
+
+
+  updateClock();
+
+  setInterval(
+    updateClock,
+    1000
+  );
+
+
+  connectionStatus(
+    'connecting'
+  );
+
+
+  await loadStudents();
+
+  await loadAttendance(
+    manilaDate()
+  );
+
+
+  renderGrid();
+
+  renderHistory();
+
+  subscribeAttendance();
+
+}
+
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+
+el.loginBtn.addEventListener(
+  'click',
+  login
+);
+
+
+el.loginPassword.addEventListener(
+  'keydown',
+  event => {
+
+    if(event.key === 'Enter')
+      login();
+
+  }
+);
+
+
+el.logoutBtn.addEventListener(
+  'click',
+  logout
+);
+
+
+el.addStudentBtn.addEventListener(
+  'click',
+  openModal
+);
+
+
+el.modalCloseBtn.addEventListener(
+  'click',
+  closeModal
+);
+
+
+el.modalCancelBtn.addEventListener(
+  'click',
+  closeModal
+);
+
+
+el.modalOverlay.addEventListener(
+  'click',
+  event => {
+
+    if(
+      event.target ===
+      el.modalOverlay
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+el.modalSaveBtn.addEventListener(
+  'click',
+  saveStudent
+);
+
+
+el.scanUidBtn.addEventListener(
+  'click',
+  startRFIDScan
+);
+
+
+el.inpUid.addEventListener(
+  'input',
+  () => {
+
+    el.inpUid.value =
+      el.inpUid.value
+        .replace(
+          /[^0-9a-fA-F]/g,
+          ''
+        )
+        .toUpperCase();
+
+  }
+);
+
+
+el.searchInput.addEventListener(
+  'input',
+  event => {
+
+    state.searchQ =
+      event.target.value;
+
+    renderGrid();
+
+  }
+);
+
+
+document
+  .querySelectorAll('.chip')
+  .forEach(button => {
+
+    button.addEventListener(
+      'click',
+      () =>
+        setFilter(
+          button.dataset.filter
+        )
+    );
+
+  });
+
+
+el.refreshBtn.addEventListener(
+  'click',
+  refresh
+);
+
+
+el.printDate.addEventListener(
+  'change',
+  async () => {
+
+    await loadAttendance(
+      el.printDate.value
+    );
+
+  }
+);
+
+
+el.printBtn.addEventListener(
+  'click',
+  printPDF
+);
+
+
+/* ============================================================
+   CLOSE MODAL WITH ESC
+   ============================================================ */
+
+document.addEventListener(
+  'keydown',
+  event => {
+
+    if(
+      event.key === 'Escape' &&
+      el.modalOverlay.classList.contains(
+        'open'
+      )
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   AUTH STATE
+   ============================================================ */
+
+sb.auth.onAuthStateChange(
+  (event,session) => {
+
+    if(session){
+
+      showApp();
+
+    }
+
+    else{
+
+      initialized =
+        false;
+
+      showLogin();
+
+    }
+
+  }
+);
+
+
+/* ============================================================
    START
-========================================================= */
+   ============================================================ */
 
 checkAuth();
+
+
+})();
 
 </script>
 
