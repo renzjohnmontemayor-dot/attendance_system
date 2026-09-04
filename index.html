@@ -1,2138 +1,4679 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Global Academy | Smart RFID Attendance</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
 <style>
+
 /* ============================================================
-   DESIGN TOKENS & RESET
+   DESIGN
    ============================================================ */
+
 :root {
-  --maroon-deep:  #5a0000;
-  --maroon:       #8e0000;
-  --maroon-mid:   #b40000;
-  --maroon-light: #c62828;
-  --gold:         #e6b500;
-  --gold-light:   #f5cc30;
-  --gold-pale:    #fff8dc;
 
-  --bg-base:      #f5f3ef;
-  --bg-surface:   #ffffff;
-  --bg-raised:    #faf9f7;
-  --bg-subtle:    #f0ede8;
+  --maroon-deep:#5a0000;
+  --maroon:#8e0000;
+  --maroon-mid:#b40000;
+  --maroon-light:#c62828;
 
-  --text-primary:   #1a1210;
-  --text-secondary: #5c4f4a;
-  --text-muted:     #9e8e88;
-  --text-inverse:   #ffffff;
+  --gold:#e6b500;
+  --gold-light:#f5cc30;
+  --gold-pale:#fff8dc;
 
-  --border:       #e2dad4;
-  --border-focus: #b40000;
+  --bg-base:#f5f3ef;
+  --bg-surface:#fff;
+  --bg-raised:#faf9f7;
+  --bg-subtle:#f0ede8;
 
-  --green:        #1a7a4a;
-  --green-bg:     #eaf7f1;
-  --green-border: #a3d9be;
-  --red:          #b40000;
-  --red-bg:       #fdeaea;
-  --red-border:   #f5b8b8;
-  --amber:        #c47a00;
-  --amber-bg:     #fff8e1;
+  --text-primary:#1a1210;
+  --text-secondary:#5c4f4a;
+  --text-muted:#9e8e88;
 
-  --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:  0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
-  --shadow-lg:  0 12px 32px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.08);
-  --shadow-xl:  0 24px 48px rgba(0,0,0,.18), 0 8px 16px rgba(0,0,0,.10);
+  --border:#e2dad4;
 
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
-  --radius-xl:  24px;
-  --radius-full: 9999px;
+  --green:#1a7a4a;
+  --green-bg:#eaf7f1;
+  --green-border:#a3d9be;
 
-  --font-display: 'Georgia', 'Times New Roman', serif;
-  --font-body:    system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono:    'Courier New', monospace;
+  --red:#b40000;
+  --red-bg:#fdeaea;
+  --red-border:#f5b8b8;
 
-  --transition: 150ms ease;
-  --transition-md: 250ms ease;
+  --amber:#c47a00;
 
-  --header-h: 70px;
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:16px;
+  --radius-xl:24px;
+  --radius-full:9999px;
+
+  --font-display:Georgia,"Times New Roman",serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"Courier New",monospace;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 12px rgba(0,0,0,.10);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.14);
+
+  --header-h:70px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-base:      #130a0a;
-    --bg-surface:   #1e1210;
-    --bg-raised:    #251815;
-    --bg-subtle:    #2e1f1c;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-    --text-primary:   #f5ece8;
-    --text-secondary: #c4a99f;
-    --text-muted:     #7a6058;
+body{
+  font-family:var(--font-body);
+  color:var(--text-primary);
+  background:var(--bg-base);
+  min-height:100vh;
+}
 
-    --border:       #3a2520;
-    --border-focus: #e6b500;
+button,
+input{
+  font-family:inherit;
+}
 
-    --green:        #3fd480;
-    --green-bg:     #0d2e1d;
-    --green-border: #1a5c38;
-    --red:          #ff6b6b;
-    --red-bg:       #2e0d0d;
-    --red-border:   #5c1a1a;
-    --amber-bg:     #2a1f00;
+button{
+  cursor:pointer;
+}
 
-    --shadow-sm:  0 1px 3px rgba(0,0,0,.3);
-    --shadow-md:  0 4px 12px rgba(0,0,0,.4);
-    --shadow-lg:  0 12px 32px rgba(0,0,0,.5);
-    --shadow-xl:  0 24px 48px rgba(0,0,0,.6);
+/* ============================================================
+   LOGIN
+   ============================================================ */
+
+.login-screen{
+
+  position:fixed;
+  inset:0;
+
+  background:
+    radial-gradient(circle at top right,rgba(230,181,0,.15),transparent 35%),
+    linear-gradient(135deg,#3d0000,#8e0000,#5a0000);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  z-index:10000;
+}
+
+.login-box{
+
+  width:100%;
+  max-width:420px;
+
+  background:#fff;
+
+  border-radius:24px;
+
+  padding:34px;
+
+  box-shadow:0 25px 60px rgba(0,0,0,.35);
+
+  animation:loginIn .35s ease;
+}
+
+@keyframes loginIn{
+
+  from{
+    opacity:0;
+    transform:translateY(20px);
   }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-html, body {
-  width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: auto;
-}
-body {
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--bg-base);
-  min-height: 100vh;
-  min-height: 100dvh;
-  -webkit-font-smoothing: antialiased;
-}
-img { display: block; max-width: 100%; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-input, select { font-family: inherit; }
-a { color: inherit; }
-:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
+.login-logo{
 
-/* ============================================================
-   KEYFRAMES
-   ============================================================ */
-@keyframes fadeUp   { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-@keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-@keyframes slideIn  { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
-@keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(230,181,0,.5)} 50%{box-shadow:0 0 0 12px rgba(230,181,0,0)} }
-@keyframes shimmer  { from{background-position:-400px 0} to{background-position:400px 0} }
-@keyframes spin     { to{transform:rotate(360deg)} }
-@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:.35} }
-@keyframes scanPing { 0%{transform:scale(1);opacity:1} 70%{transform:scale(1.6);opacity:0} 100%{transform:scale(1);opacity:0} }
-@keyframes toastIn  { from{opacity:0;transform:translateY(8px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
-@keyframes toastOut { to{opacity:0;transform:translateY(8px) scale(.96)} }
-@keyframes numPop   { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
-@keyframes flashBg  { 0%{background:rgba(230,181,0,.22)} 100%{background:transparent} }
+  width:80px;
+  height:80px;
 
-/* ============================================================
-   LAYOUT SCAFFOLD
-   ============================================================ */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  height: var(--header-h);
-  background: linear-gradient(135deg, var(--maroon-deep) 0%, var(--maroon) 55%, var(--maroon-mid) 100%);
-  border-bottom: 3px solid var(--gold);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 24px;
-  box-shadow: 0 2px 16px rgba(0,0,0,.35);
-}
-.header-logo-wrap {
-  flex-shrink: 0;
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--gold);
-  background: var(--maroon-deep);
-  display: flex; align-items: center; justify-content: center;
-}
-.header-logo-wrap img { width:100%; height:100%; object-fit:cover; }
-.logo-fallback {
-  display: none;
-  width: 100%; height: 100%;
-  align-items: center; justify-content: center;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: .5px;
-  background: var(--maroon-deep);
-}
-.header-titles { flex: 1; min-width: 0; }
-.header-school {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-inverse);
-  letter-spacing: .3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.header-sub {
-  font-size: 11px;
-  color: var(--gold);
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
-.header-clock {
-  text-align: right;
-  flex-shrink: 0;
-}
-.clock-time {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 1.5px;
-  line-height: 1;
-}
-.clock-date {
-  font-size: 11px;
-  color: rgba(255,255,255,.7);
-  margin-top: 2px;
-}
-.header-status {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(255,255,255,.12);
-  color: var(--gold);
-  transition: background var(--transition-md), color var(--transition-md);
-  cursor: default;
-}
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--gold);
-  position: relative;
-}
-.status-dot.live::after {
-  content:'';
-  position:absolute; inset:-3px;
   border-radius:50%;
-  border: 2px solid var(--gold);
-  animation: scanPing 1.6s ease infinite;
-}
-.status-dot.error { background: #ff6b6b; }
-.status-dot.warn  { background: var(--amber); }
-.header-status.error { color:#ff6b6b; }
 
-.main-layout {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px 20px 48px;
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  grid-template-rows: auto auto 1fr;
-  gap: 20px;
+  object-fit:cover;
+
+  display:block;
+
+  margin:0 auto 18px;
+
+  border:3px solid var(--gold);
+
+}
+
+.login-fallback{
+
+  width:80px;
+  height:80px;
+
+  margin:0 auto 18px;
+
+  border-radius:50%;
+
+  background:var(--maroon);
+
+  color:var(--gold);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-family:var(--font-display);
+
+  font-size:24px;
+  font-weight:bold;
+
+  border:3px solid var(--gold);
+}
+
+.login-title{
+
+  text-align:center;
+
+  font-family:var(--font-display);
+
+  font-size:25px;
+
+  color:var(--maroon);
+
+  margin-bottom:4px;
+}
+
+.login-subtitle{
+
+  text-align:center;
+
+  color:var(--text-muted);
+
+  font-size:12px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  margin-bottom:28px;
+}
+
+.login-field{
+
+  margin-bottom:15px;
+}
+
+.login-label{
+
+  display:block;
+
+  font-size:12px;
+
+  font-weight:700;
+
+  text-transform:uppercase;
+
+  color:var(--text-secondary);
+
+  margin-bottom:6px;
+}
+
+.login-input{
+
+  width:100%;
+
+  padding:12px 14px;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:#faf9f7;
+
+  color:var(--text-primary);
+
+  outline:none;
+
+}
+
+.login-input:focus{
+
+  border-color:var(--maroon);
+
+  box-shadow:0 0 0 3px rgba(142,0,0,.10);
+
+}
+
+.login-btn{
+
+  width:100%;
+
+  padding:13px;
+
+  border-radius:10px;
+
+  background:linear-gradient(135deg,var(--maroon),var(--maroon-mid));
+
+  color:white;
+
+  font-weight:700;
+
+  border:none;
+
+  margin-top:5px;
+
+}
+
+.login-btn:hover{
+
+  transform:translateY(-1px);
+
+  box-shadow:0 5px 15px rgba(142,0,0,.3);
+
+}
+
+.login-error{
+
+  display:none;
+
+  margin-top:14px;
+
+  padding:10px;
+
+  border-radius:8px;
+
+  background:var(--red-bg);
+
+  color:var(--red);
+
+  font-size:13px;
+
+  text-align:center;
+}
+
+.login-error.show{
+  display:block;
+}
+
+.login-loading{
+
+  display:none;
+
+  text-align:center;
+
+  font-size:12px;
+
+  color:var(--text-muted);
+
+  margin-top:12px;
+}
+
+/* ============================================================
+   APP HEADER
+   ============================================================ */
+
+#app{
+  display:none;
+}
+
+.app-header{
+
+  height:70px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--maroon-deep),
+      var(--maroon),
+      var(--maroon-mid)
+    );
+
+  border-bottom:3px solid var(--gold);
+
+  display:flex;
+  align-items:center;
+
+  gap:15px;
+
+  padding:0 24px;
+
+  color:white;
+
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.header-logo-wrap{
+
+  width:44px;
+  height:44px;
+
+  border-radius:50%;
+
+  overflow:hidden;
+
+  border:2px solid var(--gold);
+
+  flex-shrink:0;
+}
+
+.header-logo-wrap img{
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+}
+
+.header-titles{
+  flex:1;
+}
+
+.header-school{
+
+  font-family:var(--font-display);
+
+  font-size:17px;
+
+  font-weight:bold;
+}
+
+.header-sub{
+
+  font-size:10px;
+
+  color:var(--gold);
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+}
+
+.header-clock{
+
+  text-align:right;
+}
+
+.clock-time{
+
+  font-family:var(--font-mono);
+
+  font-weight:bold;
+
+  color:var(--gold);
+
+  font-size:18px;
+}
+
+.clock-date{
+
+  font-size:10px;
+
+  color:rgba(255,255,255,.7);
+}
+
+.header-status{
+
+  display:flex;
+  align-items:center;
+
+  gap:6px;
+
+  padding:5px 10px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.12);
+
+  color:var(--gold);
+
+  font-size:10px;
+
+  font-weight:bold;
+
+  text-transform:uppercase;
+}
+
+.status-dot{
+
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:var(--gold);
+}
+
+.status-dot.live{
+  background:#4ade80;
+}
+
+.status-dot.error{
+  background:#ff6b6b;
+}
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+.logout-btn{
+
+  padding:7px 12px;
+
+  border-radius:8px;
+
+  border:1px solid rgba(255,255,255,.25);
+
+  color:white;
+
+  font-size:12px;
+
+  background:rgba(255,255,255,.08);
+}
+
+.logout-btn:hover{
+
+  background:rgba(255,255,255,.18);
+
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+
+.main-layout{
+
+  max-width:1400px;
+
+  margin:auto;
+
+  padding:24px 20px 50px;
+
+  display:grid;
+
+  grid-template-columns:1fr 340px;
+
+  gap:20px;
+
   grid-template-areas:
-    "stats  scan"
+
+    "stats scan"
+
     "toolbar scan"
-    "grid   scan";
-  align-items: start;
-}
-@media (max-width: 1100px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "scan"
-      "stats"
-      "toolbar"
-      "grid";
-  }
-  .sidebar-scan { position: static; }
+
+    "grid scan";
+
 }
 
-/* ============================================================
-   MOBILE / TOUCH SCROLL FIX
-   Keep the page itself as the only main scrolling surface.
-   Sticky headers can interfere with page scrolling on some
-   mobile browsers, so they become normal flow elements.
-   ============================================================ */
-@media (max-width: 700px) {
-  html, body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: auto;
-    min-height: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
+.stats-row{
 
-  .app-header {
-    position: relative;
-    top: auto;
-    height: auto;
-    min-height: 64px;
-    padding: 10px 12px;
-    gap: 9px;
-  }
+  grid-area:stats;
 
-  .header-logo-wrap { width: 38px; height: 38px; }
-  .header-school { font-size: 14px; }
-  .header-sub { font-size: 9px; letter-spacing: .8px; }
-  .clock-time { font-size: 15px; letter-spacing: .8px; }
-  .clock-date { font-size: 9px; }
-  .header-status { font-size: 9px; padding: 3px 7px; }
-  .header-status span:last-child { display: none; }
+  display:grid;
 
-  .main-layout {
-    width: 100%;
-    padding: 14px 10px 40px;
-    gap: 14px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "scan"
-      "stats"
-      "toolbar"
-      "grid";
-  }
+  grid-template-columns:repeat(4,1fr);
 
-  .sidebar-scan {
-    position: static !important;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .scan-hero { min-height: 150px; padding: 18px; }
-  .history-list { max-height: 220px; }
-
-  .toolbar {
-    width: 100%;
-    min-width: 0;
-    align-items: stretch;
-  }
-  .search-wrap { min-width: 100%; }
-  .filter-chips { width: 100%; }
-  .filter-chips .chip { flex: 1; text-align: center; }
-  .showing-count { margin-left: 0; width: 100%; }
-  .toolbar-actions { width: 100%; margin-left: 0; }
-  .toolbar-actions .btn { flex: 1; justify-content: center; min-height: 42px; }
-
-  .grid-area {
-    width: 100%;
-    min-width: 0;
-    grid-template-columns: 1fr;
-  }
-
-  .print-row { flex-direction: column; align-items: stretch; }
-  .date-input, .print-row .btn { width: 100%; min-height: 42px; }
-
-  .modal-overlay {
-    align-items: flex-start;
-    justify-content: center;
-    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .modal {
-    max-height: calc(100dvh - 20px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 auto;
-  }
-  .modal-body { padding: 18px; }
-  .modal-footer { padding: 14px 18px; }
-  .rfid-row { flex-wrap: wrap; }
-  .rfid-row .form-input { min-width: 0; width: 100%; }
-  .rfid-row .btn { width: 100%; justify-content: center; min-height: 42px; }
-
-  .toast-container {
-    left: 10px;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-  }
-  .toast { max-width: none; width: 100%; }
+  gap:14px;
 }
 
+.stat-card{
 
-/* ============================================================
-   STAT CARDS
-   ============================================================ */
-.stats-row {
-  grid-area: stats;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  background:var(--bg-surface);
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  padding:20px;
+
+  box-shadow:var(--shadow-sm);
+
 }
-@media (max-width: 700px) {
-  .stats-row { grid-template-columns: repeat(2,1fr); }
+
+.stat-label{
+
+  font-size:10px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  color:var(--text-muted);
+
+  font-weight:bold;
+
 }
-.stat-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow var(--transition-md), transform var(--transition-md);
+
+.stat-value{
+
+  font-family:var(--font-display);
+
+  font-size:35px;
+
+  font-weight:bold;
+
+  margin-top:5px;
 }
-.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
+
+.stat-card.present .stat-value{
+  color:var(--green);
 }
-.stat-card.total::before    { background: linear-gradient(90deg, var(--maroon), var(--gold)); }
-.stat-card.present::before  { background: var(--green); }
-.stat-card.absent::before   { background: var(--red); }
-.stat-card.rate::before     { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+
+.stat-card.absent .stat-value{
+  color:var(--red);
 }
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-primary);
+
+.stat-card.rate .stat-value{
+  color:var(--amber);
 }
-.stat-card.present .stat-value { color: var(--green); }
-.stat-card.absent  .stat-value { color: var(--red); }
-.stat-card.rate    .stat-value { color: var(--amber); }
-.stat-changed { animation: numPop .4s ease; }
 
 /* ============================================================
    TOOLBAR
    ============================================================ */
-.toolbar {
-  grid-area: toolbar;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 180px;
-}
-.search-icon {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-.search-input {
-  width: 100%;
-  padding: 9px 36px 9px 36px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-.search-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(180,0,0,.12);
-  outline: none;
-}
-.search-clear {
-  position: absolute;
-  right: 8px; top: 50%;
-  transform: translateY(-50%);
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  color: var(--bg-surface);
-  font-size: 11px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  line-height: 1;
-}
-.search-clear.visible { display: flex; }
-.filter-chips {
-  display: flex;
-  gap: 6px;
-}
-.chip {
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .4px;
-  border: 1.5px solid var(--border);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-.chip:hover  { border-color: var(--maroon); color: var(--maroon); }
-.chip.active { background: var(--maroon); border-color: var(--maroon); color: #fff; box-shadow: 0 2px 8px rgba(142,0,0,.3); }
-.chip.present.active { background: var(--green); border-color: var(--green); box-shadow: 0 2px 8px rgba(26,122,74,.3); }
-.chip.absent.active  { background: var(--red); border-color: var(--red); box-shadow: 0 2px 8px rgba(180,0,0,.3); }
 
-.showing-count {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-left: auto;
-  white-space: nowrap;
-  align-self: center;
+.toolbar{
+
+  grid-area:toolbar;
+
+  display:flex;
+
+  gap:10px;
+
+  align-items:center;
+
+  flex-wrap:wrap;
 }
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
+
+.search-wrap{
+
+  position:relative;
+
+  flex:1;
+
+  min-width:200px;
 }
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 600;
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  transition: all var(--transition-md);
-  white-space: nowrap;
-  line-height: 1;
+
+.search-input{
+
+  width:100%;
+
+  padding:10px 14px 10px 36px;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:white;
+
+  outline:none;
 }
-.btn-primary {
-  background: linear-gradient(135deg, var(--maroon), var(--maroon-mid));
-  color: #fff;
-  border-color: var(--maroon);
-  box-shadow: 0 2px 8px rgba(142,0,0,.25);
+
+.search-icon{
+
+  position:absolute;
+
+  left:12px;
+
+  top:50%;
+
+  transform:translateY(-50%);
+
+  color:var(--text-muted);
 }
-.btn-primary:hover { background: linear-gradient(135deg, var(--maroon-mid), var(--maroon-light)); box-shadow: 0 4px 14px rgba(142,0,0,.35); transform:translateY(-1px); }
-.btn-primary:active { transform:translateY(0); }
-.btn-gold {
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--maroon-deep);
-  border-color: var(--gold);
-  box-shadow: 0 2px 8px rgba(230,181,0,.25);
+
+.filter-chips{
+
+  display:flex;
+
+  gap:6px;
 }
-.btn-gold:hover { box-shadow: 0 4px 14px rgba(230,181,0,.4); transform:translateY(-1px); }
-.btn-ghost {
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  border-color: var(--border);
-  box-shadow: var(--shadow-sm);
+
+.chip{
+
+  padding:8px 14px;
+
+  border:1px solid var(--border);
+
+  border-radius:999px;
+
+  background:white;
+
+  color:var(--text-secondary);
+
+  font-size:12px;
+
+  font-weight:bold;
 }
-.btn-ghost:hover { border-color: var(--maroon); color: var(--maroon); transform:translateY(-1px); }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn svg { width:15px; height:15px; flex-shrink:0; }
-.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-.spinning { animation: spin .8s linear infinite; }
+
+.chip.active{
+
+  background:var(--maroon);
+
+  color:white;
+
+  border-color:var(--maroon);
+}
+
+.chip.present.active{
+
+  background:var(--green);
+
+  border-color:var(--green);
+}
+
+.chip.absent.active{
+
+  background:var(--red);
+
+  border-color:var(--red);
+}
+
+.toolbar-actions{
+
+  display:flex;
+
+  gap:7px;
+}
+
+.btn{
+
+  padding:9px 14px;
+
+  border-radius:9px;
+
+  border:1px solid transparent;
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  gap:6px;
+}
+
+.btn-primary{
+
+  background:var(--maroon);
+
+  color:white;
+}
+
+.btn-gold{
+
+  background:var(--gold);
+
+  color:var(--maroon-deep);
+}
+
+.btn-ghost{
+
+  background:white;
+
+  border-color:var(--border);
+
+  color:var(--text-secondary);
+}
 
 /* ============================================================
    STUDENT GRID
    ============================================================ */
-.grid-area {
-  grid-area: grid;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-  align-content: start;
-}
-.student-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-md), box-shadow var(--transition-md);
-  animation: fadeUp .3s ease both;
-  position: relative;
-  overflow: hidden;
-}
-.student-card:hover { transform:translateY(-2px); box-shadow: var(--shadow-md); }
-.student-card.present-card { border-left: 4px solid var(--green); }
-.student-card.absent-card  { border-left: 4px solid var(--red-border); }
-.student-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.student-avatar {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--maroon), var(--gold));
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-}
-.student-info { flex: 1; min-width: 0; }
-.student-name {
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1.3;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.student-id {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  margin-top: 1px;
-}
-.status-badge {
-  flex-shrink: 0;
-  padding: 3px 9px;
-  border-radius: var(--radius-full);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-}
-.badge-present { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-.badge-absent  { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-.student-section {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.student-times {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-}
-.time-block { }
-.time-block-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-.time-block-val {
-  font-size: 12px;
-  font-family: var(--font-mono);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-.time-block-val.empty { color: var(--text-muted); font-style: italic; }
 
-/* Skeleton */
-.skeleton {
-  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-raised) 50%, var(--bg-subtle) 75%);
-  background-size: 800px 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: var(--radius-sm);
-}
-.skeleton-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-.skel-row { height: 14px; margin-bottom: 8px; }
-.skel-w-60 { width: 60%; }
-.skel-w-40 { width: 40%; }
-.skel-w-80 { width: 80%; }
-.skel-avatar { width:38px; height:38px; border-radius:50%; margin-bottom:0; }
+.grid-area{
 
-/* Empty state */
-.empty-state {
-  grid-column: 1/-1;
-  text-align: center;
-  padding: 48px 24px;
-  animation: fadeIn .3s ease;
+  grid-area:grid;
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fill,minmax(260px,1fr));
+
+  gap:14px;
 }
-.empty-icon {
-  width: 64px; height: 64px;
-  margin: 0 auto 16px;
-  opacity: .3;
+
+.student-card{
+
+  background:white;
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  padding:16px;
+
+  box-shadow:var(--shadow-sm);
+
+  position:relative;
 }
-.empty-title { font-weight: 700; font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
-.empty-sub   { font-size: 13px; color: var(--text-muted); }
+
+.student-card.present-card{
+
+  border-left:4px solid var(--green);
+}
+
+.student-card.absent-card{
+
+  border-left:4px solid var(--red-border);
+}
+
+.student-card-header{
+
+  display:flex;
+
+  gap:9px;
+
+  align-items:flex-start;
+
+  margin-bottom:10px;
+}
+
+.student-avatar{
+
+  width:40px;
+  height:40px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(
+    135deg,
+    var(--maroon),
+    var(--gold)
+  );
+
+  color:white;
+
+  font-family:var(--font-display);
+
+  font-weight:bold;
+}
+
+.student-info{
+
+  flex:1;
+
+  min-width:0;
+}
+
+.student-name{
+
+  font-weight:bold;
+
+  font-size:14px;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.student-id{
+
+  font-family:var(--font-mono);
+
+  font-size:10px;
+
+  color:var(--text-muted);
+}
+
+.student-section{
+
+  font-size:12px;
+
+  color:var(--text-secondary);
+
+  margin-bottom:10px;
+}
+
+.status-badge{
+
+  font-size:9px;
+
+  padding:3px 8px;
+
+  border-radius:999px;
+
+  font-weight:bold;
+
+  text-transform:uppercase;
+}
+
+.badge-present{
+
+  background:var(--green-bg);
+
+  color:var(--green);
+
+  border:1px solid var(--green-border);
+}
+
+.badge-absent{
+
+  background:var(--red-bg);
+
+  color:var(--red);
+
+  border:1px solid var(--red-border);
+}
+
+.student-times{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:8px;
+
+  border-top:1px solid var(--border);
+
+  padding-top:10px;
+
+  margin-top:10px;
+}
+
+.time-block-label{
+
+  font-size:9px;
+
+  text-transform:uppercase;
+
+  color:var(--text-muted);
+
+  font-weight:bold;
+}
+
+.time-block-val{
+
+  font-family:var(--font-mono);
+
+  font-size:11px;
+
+  font-weight:bold;
+}
+
+.empty{
+
+  color:var(--text-muted);
+
+  font-style:italic;
+}
+
+.delete-student{
+
+  margin-top:12px;
+
+  width:100%;
+
+  padding:7px;
+
+  border-radius:8px;
+
+  border:1px solid var(--red-border);
+
+  color:var(--red);
+
+  background:var(--red-bg);
+
+  font-size:11px;
+
+  font-weight:bold;
+}
+
+.delete-student:hover{
+
+  background:var(--red);
+
+  color:white;
+}
 
 /* ============================================================
-   SIDEBAR — SCAN PANEL
+   SIDEBAR
    ============================================================ */
-.sidebar-scan {
-  grid-area: scan;
-  position: sticky;
-  top: calc(var(--header-h) + 20px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.scan-hero {
-  background: linear-gradient(160deg, var(--maroon-deep) 0%, var(--maroon) 70%, #6a0000 100%);
-  border-radius: var(--radius-xl);
-  padding: 22px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255,255,255,.07);
-  position: relative;
-  overflow: hidden;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  transition: all var(--transition-md);
-}
-.scan-hero::before {
-  content:'';
-  position:absolute; inset:0;
-  background: radial-gradient(ellipse at 80% 20%, rgba(230,181,0,.15) 0%, transparent 60%);
-  pointer-events:none;
-}
-.scan-hero.flash { animation: flashBg .7s ease; }
-.scan-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.scan-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--gold);
-  animation: blink 1.4s ease infinite;
-}
-.scan-idle {
-  text-align: center;
-  padding: 16px 0 4px;
-}
-.scan-idle-icon { opacity:.3; margin: 0 auto 10px; }
-.scan-idle-text { color:rgba(255,255,255,.4); font-size:13px; }
-.scan-result { animation: slideIn .35s ease; }
-.scan-name {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.2;
-  margin-bottom: 4px;
-}
-.scan-meta {
-  font-size: 12px;
-  color: rgba(255,255,255,.65);
-  margin-bottom: 12px;
-  font-family: var(--font-mono);
-}
-.scan-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-}
-.pill-present  { background: rgba(26,122,74,.3);  color: #6de0a4; border: 1px solid rgba(26,122,74,.5); }
-.pill-timeout  { background: rgba(230,181,0,.2);  color: var(--gold); border: 1px solid rgba(230,181,0,.4); }
-.pill-unknown  { background: rgba(255,107,107,.2); color: #ff9f9f; border: 1px solid rgba(255,107,107,.4); }
-.scan-time-label { font-size:11px; color:rgba(255,255,255,.5); margin-top:8px; font-family:var(--font-mono); }
 
-.scan-history-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-.history-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.sound-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color var(--transition);
-  background: none;
-  border: none;
-  padding: 0;
-}
-.sound-toggle:hover { color: var(--text-primary); }
-.toggle-track {
-  width: 28px; height: 16px;
-  border-radius: 8px;
-  background: var(--border);
-  position: relative;
-  transition: background var(--transition);
-}
-.toggle-track.on { background: var(--green); }
-.toggle-thumb {
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: #fff;
-  transition: left var(--transition);
-}
-.toggle-track.on .toggle-thumb { left: 14px; }
-.history-list { max-height: 280px; overflow-y: auto; }
-.history-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  animation: fadeIn .25s ease;
-  transition: background var(--transition);
-}
-.history-item:last-child { border-bottom: none; }
-.history-item:hover { background: var(--bg-raised); }
-.history-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.dot-present { background: var(--green); }
-.dot-timeout { background: var(--gold); }
-.dot-unknown { background: var(--red); }
-.history-info { flex: 1; min-width: 0; }
-.history-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.history-time { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-.history-badge { font-size: 10px; font-weight: 700; letter-spacing:.5px; text-transform:uppercase; }
-.hb-present { color: var(--green); }
-.hb-timeout { color: var(--amber); }
-.hb-unknown { color: var(--red); }
-.history-empty { padding: 24px; text-align:center; font-size:12px; color:var(--text-muted); }
+.sidebar-scan{
 
-/* print toolbar */
-.print-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
+  grid-area:scan;
+
+  position:sticky;
+
+  top:90px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:14px;
 }
-.print-panel-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 10px;
+
+.scan-hero{
+
+  background:
+    linear-gradient(
+      160deg,
+      var(--maroon-deep),
+      var(--maroon)
+    );
+
+  border-radius:22px;
+
+  padding:22px;
+
+  min-height:160px;
+
+  color:white;
+
+  box-shadow:var(--shadow-lg);
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:flex-end;
 }
-.print-row { display:flex; gap:8px; align-items:center; }
-.date-input {
-  flex: 1;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
-  color: var(--text-primary);
-  font-size: 13px;
-  transition: border-color var(--transition);
+
+.scan-label{
+
+  color:var(--gold);
+
+  font-size:10px;
+
+  font-weight:bold;
+
+  letter-spacing:1.5px;
+
+  text-transform:uppercase;
+
+  margin-bottom:10px;
 }
-.date-input:focus { border-color: var(--border-focus); outline:none; box-shadow:0 0 0 3px rgba(180,0,0,.1); }
+
+.scan-idle{
+
+  text-align:center;
+
+  padding:15px 0;
+}
+
+.scan-idle-icon{
+
+  opacity:.35;
+
+  margin-bottom:8px;
+}
+
+.scan-idle-text{
+
+  color:rgba(255,255,255,.45);
+
+  font-size:13px;
+}
+
+.scan-name{
+
+  font-family:var(--font-display);
+
+  font-size:20px;
+
+  font-weight:bold;
+}
+
+.scan-meta{
+
+  color:rgba(255,255,255,.65);
+
+  font-size:11px;
+
+  margin:4px 0 10px;
+}
+
+.scan-pill{
+
+  display:inline-block;
+
+  padding:5px 11px;
+
+  border-radius:999px;
+
+  font-size:10px;
+
+  font-weight:bold;
+}
+
+.pill-present{
+
+  background:rgba(26,122,74,.3);
+
+  color:#6de0a4;
+}
+
+.pill-timeout{
+
+  background:rgba(230,181,0,.2);
+
+  color:var(--gold);
+}
+
+.pill-unknown{
+
+  background:rgba(255,107,107,.2);
+
+  color:#ff9f9f;
+}
+
+.scan-time-label{
+
+  font-family:var(--font-mono);
+
+  font-size:10px;
+
+  margin-top:7px;
+
+  color:rgba(255,255,255,.5);
+}
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+.scan-history-panel,
+.print-panel{
+
+  background:white;
+
+  border:1px solid var(--border);
+
+  border-radius:16px;
+
+  overflow:hidden;
+
+  box-shadow:var(--shadow-sm);
+}
+
+.history-header,
+.print-panel-title{
+
+  padding:13px 16px;
+
+  border-bottom:1px solid var(--border);
+
+  font-size:11px;
+
+  font-weight:bold;
+
+  color:var(--text-muted);
+
+  text-transform:uppercase;
+
+  letter-spacing:.8px;
+}
+
+.history-list{
+
+  max-height:280px;
+
+  overflow-y:auto;
+}
+
+.history-item{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  padding:10px 16px;
+
+  border-bottom:1px solid var(--border);
+}
+
+.history-dot{
+
+  width:8px;
+  height:8px;
+
+  border-radius:50%;
+}
+
+.dot-present{
+  background:var(--green);
+}
+
+.dot-timeout{
+  background:var(--gold);
+}
+
+.dot-unknown{
+  background:var(--red);
+}
+
+.history-info{
+
+  flex:1;
+
+  min-width:0;
+}
+
+.history-name{
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.history-time{
+
+  font-size:10px;
+
+  color:var(--text-muted);
+
+  font-family:var(--font-mono);
+}
+
+.history-badge{
+
+  font-size:9px;
+
+  font-weight:bold;
+}
+
+.hb-present{
+  color:var(--green);
+}
+
+.hb-timeout{
+  color:var(--amber);
+}
+
+.hb-unknown{
+  color:var(--red);
+}
+
+.history-empty{
+
+  padding:24px;
+
+  text-align:center;
+
+  color:var(--text-muted);
+
+  font-size:12px;
+}
+
+/* ============================================================
+   PRINT PANEL
+   ============================================================ */
+
+.print-panel{
+
+  padding-bottom:15px;
+}
+
+.print-row{
+
+  display:flex;
+
+  gap:8px;
+
+  padding:12px 15px 0;
+}
+
+.date-input{
+
+  flex:1;
+
+  padding:9px;
+
+  border:1px solid var(--border);
+
+  border-radius:8px;
+
+  background:var(--bg-raised);
+}
 
 /* ============================================================
    MODAL
    ============================================================ */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(4px);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: fadeIn .2s ease;
+
+.modal-overlay{
+
+  display:none;
+
+  position:fixed;
+
+  inset:0;
+
+  z-index:500;
+
+  background:rgba(0,0,0,.55);
+
+  align-items:center;
+
+  justify-content:center;
+
+  padding:20px;
 }
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--bg-surface);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
-  width: 100%;
-  max-width: 480px;
-  overflow: hidden;
-  animation: fadeUp .25s ease;
-  border: 1px solid var(--border);
+
+.modal-overlay.open{
+
+  display:flex;
 }
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--maroon-deep) 0%, var(--maroon) 100%);
+
+.modal{
+
+  width:100%;
+
+  max-width:480px;
+
+  background:white;
+
+  border-radius:20px;
+
+  overflow:hidden;
+
+  box-shadow:0 25px 60px rgba(0,0,0,.3);
 }
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: #fff;
+
+.modal-header{
+
+  padding:18px 22px;
+
+  background:linear-gradient(
+    135deg,
+    var(--maroon-deep),
+    var(--maroon)
+  );
+
+  color:white;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
 }
-.modal-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.12);
-  display: flex; align-items:center; justify-content:center;
-  color: rgba(255,255,255,.8);
-  cursor: pointer;
-  transition: background var(--transition);
-  border: none;
-  flex-shrink: 0;
+
+.modal-title{
+
+  font-family:var(--font-display);
+
+  font-size:17px;
+
+  font-weight:bold;
 }
-.modal-close:hover { background: rgba(255,255,255,.22); color:#fff; }
-.modal-body { padding: 24px; display:flex; flex-direction:column; gap:16px; }
-.form-field { display:flex; flex-direction:column; gap:6px; }
-.form-label { font-size: 12px; font-weight: 700; letter-spacing:.4px; text-transform:uppercase; color:var(--text-secondary); }
-.form-input {
-  padding: 10px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
-  color: var(--text-primary);
-  font-size: 14px;
-  transition: border-color var(--transition), box-shadow var(--transition);
+
+.modal-close{
+
+  width:32px;
+
+  height:32px;
+
+  border-radius:50%;
+
+  background:rgba(255,255,255,.12);
+
+  color:white;
 }
-.form-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(180,0,0,.1); outline:none; }
-.rfid-row { display:flex; gap:8px; align-items:flex-end; }
-.rfid-row .form-input { flex:1; font-family:var(--font-mono); letter-spacing:1px; }
-.scan-status-text { font-size:12px; margin-top:4px; min-height:18px; }
-.scan-status-text.detecting { color: var(--amber); }
-.scan-status-text.detected  { color: var(--green); }
-.scan-status-text.failed    { color: var(--red); }
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: var(--bg-raised);
+
+.modal-body{
+
+  padding:22px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:15px;
+}
+
+.form-field{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:5px;
+}
+
+.form-label{
+
+  font-size:11px;
+
+  text-transform:uppercase;
+
+  font-weight:bold;
+
+  color:var(--text-secondary);
+}
+
+.form-input{
+
+  padding:10px 13px;
+
+  border:1px solid var(--border);
+
+  border-radius:9px;
+
+  background:var(--bg-raised);
+
+  outline:none;
+}
+
+.form-input:focus{
+
+  border-color:var(--maroon);
+
+  box-shadow:0 0 0 3px rgba(142,0,0,.1);
+}
+
+.rfid-row{
+
+  display:flex;
+
+  gap:7px;
+}
+
+.rfid-row .form-input{
+  flex:1;
+}
+
+.modal-footer{
+
+  padding:15px 22px;
+
+  background:var(--bg-raised);
+
+  border-top:1px solid var(--border);
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:8px;
+}
+
+.scan-status-text{
+
+  font-size:11px;
+
+  min-height:17px;
+}
+
+.detecting{
+  color:var(--amber);
+}
+
+.detected{
+  color:var(--green);
+}
+
+.failed{
+  color:var(--red);
 }
 
 /* ============================================================
    TOAST
    ============================================================ */
-.toast-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-  max-width: 320px;
-  pointer-events: auto;
-  animation: toastIn .25s ease;
-  border-left: 3px solid var(--maroon);
-}
-.toast.success { border-left-color: var(--green); }
-.toast.error   { border-left-color: var(--red); }
-.toast.info    { border-left-color: var(--gold); }
-.toast-icon { flex-shrink:0; }
-.toast-out { animation: toastOut .25s ease forwards; }
-.toast-msg { flex:1; }
 
-/* ============================================================
-   PRINT STYLES
-   ============================================================ */
-#print-report { display:none; }
-@media print {
-  body > *:not(#print-report) { display:none !important; }
-  #print-report { display:block !important; }
-  .print-page {
-    font-family: 'Georgia', serif;
-    color: #000;
-    padding: 20mm;
-    max-width: 210mm;
-    margin: 0 auto;
-  }
-  .print-logo-row {
-    display:flex; align-items:center; gap:16px; margin-bottom:16px;
-    border-bottom: 2px solid #8e0000; padding-bottom:12px;
-  }
-  .print-logo-img { width:60px; height:60px; object-fit:cover; border-radius:50%; }
-  .print-school-name { font-size:22px; font-weight:700; color:#8e0000; }
-  .print-report-title { font-size:13px; color:#555; text-transform:uppercase; letter-spacing:1px; }
-  .print-meta { display:flex; justify-content:space-between; margin-bottom:16px; font-size:12px; }
-  .print-summary { display:flex; gap:24px; margin-bottom:16px; }
-  .print-sum-item { }
-  .print-sum-label { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:#777; }
-  .print-sum-val { font-size:24px; font-weight:700; color:#8e0000; }
-  table { width:100%; border-collapse:collapse; font-size:11.5px; }
-  thead tr { background:#8e0000; color:#fff; }
-  th { padding:8px 10px; text-align:left; }
-  td { padding:7px 10px; border-bottom:1px solid #e0e0e0; }
-  tr:nth-child(even) td { background:#fdf5f5; }
-  .print-p { color:#1a7a4a; font-weight:700; }
-  .print-a { color:#888; }
-  .print-footer { margin-top:16px; text-align:center; font-size:10px; color:#aaa; border-top:1px solid #ddd; padding-top:10px; }
+.toast-container{
+
+  position:fixed;
+
+  right:20px;
+
+  bottom:20px;
+
+  z-index:9999;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
 }
 
-@media screen and (max-width: 700px) {
-  #print-report { display: none !important; }
+.toast{
+
+  padding:12px 16px;
+
+  background:white;
+
+  border-radius:12px;
+
+  box-shadow:var(--shadow-lg);
+
+  border-left:4px solid var(--maroon);
+
+  font-size:13px;
+
+  max-width:320px;
+}
+
+.toast.success{
+  border-left-color:var(--green);
+}
+
+.toast.error{
+  border-left-color:var(--red);
+}
+
+.toast.info{
+  border-left-color:var(--gold);
 }
 
 /* ============================================================
-   MISC UTILITIES
+   MOBILE
    ============================================================ */
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-.divider { height:1px; background:var(--border); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-::-webkit-scrollbar-thumb:hover { background:var(--text-muted); }
+@media(max-width:1100px){
+
+  .main-layout{
+
+    grid-template-columns:1fr;
+
+    grid-template-areas:
+      "stats"
+      "toolbar"
+      "grid"
+      "scan";
+  }
+
+  .sidebar-scan{
+    position:static;
+  }
+
+}
+
+@media(max-width:700px){
+
+  .app-header{
+
+    height:auto;
+
+    min-height:64px;
+
+    padding:9px 10px;
+
+    gap:8px;
+
+  }
+
+  .header-logo-wrap{
+
+    width:38px;
+
+    height:38px;
+
+  }
+
+  .header-school{
+    font-size:14px;
+  }
+
+  .header-sub{
+    font-size:8px;
+  }
+
+  .header-clock{
+    display:none;
+  }
+
+  .header-status span:last-child{
+    display:none;
+  }
+
+  .logout-btn{
+    font-size:10px;
+    padding:6px 8px;
+  }
+
+  .main-layout{
+
+    padding:14px 10px 40px;
+
+  }
+
+  .stats-row{
+
+    grid-template-columns:repeat(2,1fr);
+
+  }
+
+  .stat-card{
+    padding:15px;
+  }
+
+  .stat-value{
+    font-size:28px;
+  }
+
+  .toolbar{
+
+    align-items:stretch;
+
+  }
+
+  .search-wrap{
+
+    min-width:100%;
+
+  }
+
+  .filter-chips{
+
+    width:100%;
+
+  }
+
+  .chip{
+
+    flex:1;
+
+  }
+
+  .toolbar-actions{
+
+    width:100%;
+
+  }
+
+  .toolbar-actions .btn{
+
+    flex:1;
+
+    justify-content:center;
+
+  }
+
+  .grid-area{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .print-row{
+
+    flex-direction:column;
+
+  }
+
+  .print-row .btn,
+  .date-input{
+
+    width:100%;
+
+  }
+
+  .modal-overlay{
+
+    align-items:flex-start;
+
+    padding:10px;
+
+  }
+
+  .modal{
+
+    margin-top:10px;
+
+  }
+
+  .rfid-row{
+
+    flex-direction:column;
+
+  }
+
+  .rfid-row .btn{
+
+    width:100%;
+
+    justify-content:center;
+
+  }
+
+  .toast-container{
+
+    left:10px;
+
+    right:10px;
+
+    bottom:10px;
+
+  }
+
+  .toast{
+
+    max-width:none;
+
+  }
+
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.loading{
+
+  opacity:.6;
+
+  pointer-events:none;
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- ========== HEADER ========== -->
-<header class="app-header" role="banner">
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+
+<div id="login-screen" class="login-screen">
+
+  <div class="login-box">
+
+    <img
+      src="global-academy-logo.jpg"
+      class="login-logo"
+      alt="Global Academy"
+      onerror="
+        this.style.display='none';
+        document.getElementById('login-fallback').style.display='flex';
+      "
+    >
+
+    <div id="login-fallback" class="login-fallback" style="display:none;">
+      GA
+    </div>
+
+    <div class="login-title">
+      Global Academy
+    </div>
+
+    <div class="login-subtitle">
+      Smart RFID Attendance
+    </div>
+
+    <div class="login-field">
+
+      <label class="login-label">
+        Admin Email
+      </label>
+
+      <input
+        id="login-email"
+        class="login-input"
+        type="email"
+        placeholder="admin@example.com"
+        autocomplete="username"
+      >
+
+    </div>
+
+    <div class="login-field">
+
+      <label class="login-label">
+        Password
+      </label>
+
+      <input
+        id="login-password"
+        class="login-input"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+      >
+
+    </div>
+
+    <button
+      id="login-btn"
+      class="login-btn"
+    >
+      Login
+    </button>
+
+    <div id="login-error" class="login-error"></div>
+
+    <div id="login-loading" class="login-loading">
+      Signing in...
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     APPLICATION
+     ============================================================ -->
+
+<div id="app">
+
+<header class="app-header">
+
   <div class="header-logo-wrap">
-    <img id="hdr-logo" src="global-academy-logo.jpg" alt="Global Academy Logo"
-         onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
-    <div id="logo-fallback" class="logo-fallback" aria-hidden="true">GA</div>
+
+    <img
+      src="global-academy-logo.jpg"
+      alt="Global Academy"
+    >
+
   </div>
+
   <div class="header-titles">
-    <div class="header-school">Global Academy</div>
-    <div class="header-sub">Smart RFID Attendance</div>
+
+    <div class="header-school">
+      Global Academy
+    </div>
+
+    <div class="header-sub">
+      Smart RFID Attendance
+    </div>
+
   </div>
-  <div class="header-clock" aria-live="polite" aria-atomic="true">
-    <div id="clock-time" class="clock-time">--:--:--</div>
-    <div id="clock-date" class="clock-date">Loading...</div>
+
+  <div class="header-clock">
+
+    <div id="clock-time" class="clock-time">
+      --:--:--
+    </div>
+
+    <div id="clock-date" class="clock-date">
+      Loading...
+    </div>
+
   </div>
-  <div id="conn-status" class="header-status" role="status" aria-live="polite">
-    <span id="conn-dot" class="status-dot warn"></span>
-    <span id="conn-text">Connecting</span>
+
+  <div id="conn-status" class="header-status">
+
+    <span id="conn-dot" class="status-dot"></span>
+
+    <span id="conn-text">
+      Connecting
+    </span>
+
   </div>
+
+  <button
+    id="logout-btn"
+    class="logout-btn"
+  >
+    Logout
+  </button>
+
 </header>
 
-<!-- ========== MAIN ========== -->
-<main class="main-layout" role="main">
 
-  <!-- STATS -->
-  <section class="stats-row" aria-label="Attendance Summary">
-    <div class="stat-card total">
-      <div class="stat-label">Total Students</div>
-      <div id="stat-total" class="stat-value">--</div>
-    </div>
-    <div class="stat-card present">
-      <div class="stat-label">Present</div>
-      <div id="stat-present" class="stat-value">--</div>
-    </div>
-    <div class="stat-card absent">
-      <div class="stat-label">Absent</div>
-      <div id="stat-absent" class="stat-value">--</div>
-    </div>
-    <div class="stat-card rate">
-      <div class="stat-label">Attendance Rate</div>
-      <div id="stat-rate" class="stat-value">--%</div>
-    </div>
-  </section>
+<main class="main-layout">
 
-  <!-- TOOLBAR -->
-  <div class="toolbar" role="search" aria-label="Filter students">
-    <div class="search-wrap">
-      <span class="search-icon" aria-hidden="true">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </span>
-      <input id="search-input" class="search-input" type="search" placeholder="Search by name, ID, or section..."
-             aria-label="Search students" autocomplete="off">
-      <button id="search-clear" class="search-clear" aria-label="Clear search">x</button>
+
+<!-- ============================================================
+     STATS
+     ============================================================ -->
+
+<section class="stats-row">
+
+  <div class="stat-card">
+
+    <div class="stat-label">
+      Total Students
     </div>
-    <div class="filter-chips" role="group" aria-label="Filter by status">
-      <button class="chip active" data-filter="all"     aria-pressed="true">All</button>
-      <button class="chip present" data-filter="present" aria-pressed="false">Present</button>
-      <button class="chip absent"  data-filter="absent"  aria-pressed="false">Absent</button>
+
+    <div id="stat-total" class="stat-value">
+      0
     </div>
-    <span id="showing-count" class="showing-count" aria-live="polite" aria-atomic="true"></span>
-    <div class="toolbar-actions">
-      <button id="refresh-btn" class="btn btn-ghost btn-sm" aria-label="Refresh data">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Refresh
-      </button>
-      <button id="add-student-btn" class="btn btn-primary btn-sm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-        Add Student
-      </button>
-    </div>
+
   </div>
 
-  <!-- STUDENT GRID -->
-  <section id="student-grid" class="grid-area" aria-label="Student attendance cards" aria-live="polite">
-    <!-- populated by JS -->
-  </section>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar-scan" aria-label="RFID Scan Activity">
+  <div class="stat-card present">
 
-    <!-- Hero scan card -->
-    <div id="scan-hero" class="scan-hero" aria-live="assertive" aria-atomic="true">
-      <div class="scan-label">
-        <span class="scan-dot"></span>
-        Latest RFID Scan
-      </div>
-      <div id="scan-content">
-        <div class="scan-idle">
-          <svg class="scan-idle-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          <div class="scan-idle-text">Waiting for card tap...</div>
+    <div class="stat-label">
+      Present
+    </div>
+
+    <div id="stat-present" class="stat-value">
+      0
+    </div>
+
+  </div>
+
+
+  <div class="stat-card absent">
+
+    <div class="stat-label">
+      Absent
+    </div>
+
+    <div id="stat-absent" class="stat-value">
+      0
+    </div>
+
+  </div>
+
+
+  <div class="stat-card rate">
+
+    <div class="stat-label">
+      Attendance Rate
+    </div>
+
+    <div id="stat-rate" class="stat-value">
+      0%
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ============================================================
+     TOOLBAR
+     ============================================================ -->
+
+<div class="toolbar">
+
+  <div class="search-wrap">
+
+    <span class="search-icon">
+      🔎
+    </span>
+
+    <input
+      id="search-input"
+      class="search-input"
+      type="search"
+      placeholder="Search by name, ID, or section..."
+    >
+
+  </div>
+
+
+  <div class="filter-chips">
+
+    <button
+      class="chip active"
+      data-filter="all"
+    >
+      All
+    </button>
+
+    <button
+      class="chip present"
+      data-filter="present"
+    >
+      Present
+    </button>
+
+    <button
+      class="chip absent"
+      data-filter="absent"
+    >
+      Absent
+    </button>
+
+  </div>
+
+
+  <div
+    id="showing-count"
+    style="font-size:12px;color:var(--text-muted)"
+  >
+    Showing 0
+  </div>
+
+
+  <div class="toolbar-actions">
+
+    <button
+      id="refresh-btn"
+      class="btn btn-ghost"
+    >
+      ↻ Refresh
+    </button>
+
+    <button
+      id="add-student-btn"
+      class="btn btn-primary"
+    >
+      ＋ Add Student
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     STUDENT GRID
+     ============================================================ -->
+
+<section
+  id="student-grid"
+  class="grid-area"
+></section>
+
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+
+<aside class="sidebar-scan">
+
+
+  <div
+    id="scan-hero"
+    class="scan-hero"
+  >
+
+    <div class="scan-label">
+      ● Latest RFID Scan
+    </div>
+
+    <div id="scan-content">
+
+      <div class="scan-idle">
+
+        <div
+          class="scan-idle-icon"
+          style="font-size:38px"
+        >
+          💳
         </div>
+
+        <div class="scan-idle-text">
+          Waiting for card tap...
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================
+       HISTORY
+       ======================================================== -->
+
+  <div class="scan-history-panel">
+
+    <div class="history-header">
+      Recent Scans
+    </div>
+
+    <div
+      id="history-list"
+      class="history-list"
+    >
+      <div class="history-empty">
+        No scans this session
       </div>
     </div>
 
-    <!-- Scan history -->
-    <div class="scan-history-panel">
-      <div class="history-header">
-        Recent Scans
-        <button id="sound-toggle" class="sound-toggle" aria-pressed="false" aria-label="Toggle scan sound">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          <div id="toggle-track" class="toggle-track"><div class="toggle-thumb"></div></div>
-        </button>
-      </div>
-      <div id="history-list" class="history-list">
-        <div class="history-empty">No scans this session</div>
-      </div>
+  </div>
+
+
+  <!-- ========================================================
+       PRINT
+       ======================================================== -->
+
+  <div class="print-panel">
+
+    <div class="print-panel-title">
+      Print Report
     </div>
 
-    <!-- Print panel -->
-    <div class="print-panel">
-      <div class="print-panel-title">Print Report</div>
-      <div class="print-row">
-        <input id="print-date" class="date-input" type="date" aria-label="Report date">
-        <button id="print-btn" class="btn btn-gold btn-sm">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Print PDF
-        </button>
-      </div>
+    <div class="print-row">
+
+      <input
+        id="print-date"
+        class="date-input"
+        type="date"
+      >
+
+      <button
+        id="print-btn"
+        class="btn btn-gold"
+      >
+        🖨 Print PDF
+      </button>
+
     </div>
 
-  </aside>
+  </div>
+
+
+</aside>
+
 </main>
 
-<!-- ========== ADD STUDENT MODAL ========== -->
-<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal" id="modal-box">
+</div>
+
+
+<!-- ============================================================
+     ADD STUDENT MODAL
+     ============================================================ -->
+
+<div
+  id="modal-overlay"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
     <div class="modal-header">
-      <div id="modal-title" class="modal-title">Add New Student</div>
-      <button class="modal-close" id="modal-close-btn" aria-label="Close modal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+      <div class="modal-title">
+        Add New Student
+      </div>
+
+      <button
+        id="modal-close-btn"
+        class="modal-close"
+      >
+        ×
       </button>
+
     </div>
+
+
     <div class="modal-body">
+
+
       <div class="form-field">
-        <label class="form-label" for="inp-sid">Student ID Number <span style="color:var(--red)">*</span></label>
-        <input id="inp-sid" class="form-input" type="text" placeholder="e.g. 2024-0001" autocomplete="off">
+
+        <label class="form-label">
+          Student ID Number *
+        </label>
+
+        <input
+          id="inp-sid"
+          class="form-input"
+          type="text"
+          placeholder="2024-0001"
+        >
+
       </div>
+
+
       <div class="form-field">
-        <label class="form-label" for="inp-name">Full Name <span style="color:var(--red)">*</span></label>
-        <input id="inp-name" class="form-input" type="text" placeholder="Last, First Middle" autocomplete="off">
+
+        <label class="form-label">
+          Full Name *
+        </label>
+
+        <input
+          id="inp-name"
+          class="form-input"
+          type="text"
+          placeholder="Last, First Middle"
+        >
+
       </div>
+
+
       <div class="form-field">
-        <label class="form-label" for="inp-uid">RFID UID <span style="color:var(--red)">*</span></label>
+
+        <label class="form-label">
+          RFID UID *
+        </label>
+
         <div class="rfid-row">
-          <input id="inp-uid" class="form-input" type="text" placeholder="e.g. A1B2C3D4" autocomplete="off" maxlength="20">
-          <button id="scan-uid-btn" class="btn btn-ghost btn-sm" aria-label="Scan RFID card" style="flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            Scan ID
+
+          <input
+            id="inp-uid"
+            class="form-input"
+            type="text"
+            placeholder="A1B2C3D4"
+          >
+
+          <button
+            id="scan-uid-btn"
+            class="btn btn-ghost"
+          >
+            💳 Scan ID
           </button>
+
         </div>
-        <div id="scan-status" class="scan-status-text" aria-live="polite"></div>
+
+        <div
+          id="scan-status"
+          class="scan-status-text"
+        ></div>
+
       </div>
+
+
       <div class="form-field">
-        <label class="form-label" for="inp-section">Course / Section <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-        <input id="inp-section" class="form-input" type="text" placeholder="e.g. BSIT 2-A" autocomplete="off">
+
+        <label class="form-label">
+          Course / Section
+        </label>
+
+        <input
+          id="inp-section"
+          class="form-input"
+          type="text"
+          placeholder="BSIT 2-A"
+        >
+
       </div>
+
     </div>
+
+
     <div class="modal-footer">
-      <button id="modal-cancel-btn" class="btn btn-ghost">Cancel</button>
-      <button id="modal-save-btn" class="btn btn-primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+
+      <button
+        id="modal-cancel-btn"
+        class="btn btn-ghost"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="modal-save-btn"
+        class="btn btn-primary"
+      >
         Save Student
       </button>
+
     </div>
+
   </div>
+
 </div>
 
-<!-- ========== TOAST CONTAINER ========== -->
-<div id="toast-container" class="toast-container" aria-live="assertive" aria-atomic="false" role="status"></div>
 
-<!-- ========== PRINT REPORT (hidden, print-only) ========== -->
-<div id="print-report">
-  <div class="print-page">
-    <div class="print-logo-row">
-      <img class="print-logo-img" src="global-academy-logo.jpg" alt="Logo" onerror="this.style.display='none'">
-      <div>
-        <div class="print-school-name">GLOBAL ACADEMY</div>
-        <div class="print-report-title">Attendance Report</div>
-      </div>
-    </div>
-    <div id="print-body"></div>
-    <div class="print-footer">Generated by Smart RFID Attendance System</div>
-  </div>
-</div>
+<!-- ============================================================
+     TOAST
+     ============================================================ -->
+
+<div
+  id="toast-container"
+  class="toast-container"
+></div>
+
 
 <script>
-(function() {
-  'use strict';
 
-  /* ============================================================
-     CONFIG
-     ============================================================ */
-  const SUPABASE_URL      = 'https://tlmlyymsxihzbmksinfn.supabase.co';
-  const SUPABASE_KEY      = 'sb_publishable_FWKNh4QI-Iw8sT-IzBcxcg_8epcmbmv';
-  const TEACHER_PASSWORD  = 'teacher123';
-  const TIMEZONE          = 'Asia/Manila';
-  const SCAN_TIMEOUT_MS   = 30000;
-  const SEARCH_DEBOUNCE   = 220;
-  const MAX_HISTORY       = 5;
-  const HISTORY_ITEM_ANIM_DELAY = 60;
+(function(){
 
-  /* ============================================================
-     STATE
-     ============================================================ */
-  const state = {
-    students: [],          // all students from DB
-    attendance: {},        // map: rfid_uid -> {status, inTime, outTime, record}
-    attendedIds: new Set(),// set of id values already in attendance map (dedup)
-    scanHistory: [],       // last N scan events
-    filter: 'all',         // 'all' | 'present' | 'absent'
-    searchQ: '',           // debounced search string
-    soundOn: false,
-    scanSubscription: null,// realtime channel for unregistered scans in modal
-    mainChannel: null,
-    scanTimerId: null,
-    isLoading: true,
-  };
+'use strict';
 
-  /* ============================================================
-     SUPABASE CLIENT
-     ============================================================ */
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  /* ============================================================
-     CACHED ELEMENT REFS
-     ============================================================ */
-  const el = {
-    clockTime:       document.getElementById('clock-time'),
-    clockDate:       document.getElementById('clock-date'),
-    connDot:         document.getElementById('conn-dot'),
-    connText:        document.getElementById('conn-text'),
-    connStatus:      document.getElementById('conn-status'),
-    statTotal:       document.getElementById('stat-total'),
-    statPresent:     document.getElementById('stat-present'),
-    statAbsent:      document.getElementById('stat-absent'),
-    statRate:        document.getElementById('stat-rate'),
-    studentGrid:     document.getElementById('student-grid'),
-    showingCount:    document.getElementById('showing-count'),
-    searchInput:     document.getElementById('search-input'),
-    searchClear:     document.getElementById('search-clear'),
-    refreshBtn:      document.getElementById('refresh-btn'),
-    addStudentBtn:   document.getElementById('add-student-btn'),
-    scanHero:        document.getElementById('scan-hero'),
-    scanContent:     document.getElementById('scan-content'),
-    historyList:     document.getElementById('history-list'),
-    soundToggle:     document.getElementById('sound-toggle'),
-    toggleTrack:     document.getElementById('toggle-track'),
-    printDate:       document.getElementById('print-date'),
-    printBtn:        document.getElementById('print-btn'),
-    modalOverlay:    document.getElementById('modal-overlay'),
-    modalBox:        document.getElementById('modal-box'),
-    modalCloseBtn:   document.getElementById('modal-close-btn'),
-    modalCancelBtn:  document.getElementById('modal-cancel-btn'),
-    modalSaveBtn:    document.getElementById('modal-save-btn'),
-    inpSid:          document.getElementById('inp-sid'),
-    inpName:         document.getElementById('inp-name'),
-    inpUid:          document.getElementById('inp-uid'),
-    inpSection:      document.getElementById('inp-section'),
-    scanUidBtn:      document.getElementById('scan-uid-btn'),
-    scanStatus:      document.getElementById('scan-status'),
-    toastContainer:  document.getElementById('toast-container'),
-    printBody:       document.getElementById('print-body'),
-  };
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
 
-  /* ============================================================
-     UTILS
-     ============================================================ */
-  function esc(str) {
-    const d = document.createElement('div');
-    d.textContent = str != null ? String(str) : '';
-    return d.innerHTML;
-  }
+const SUPABASE_URL =
+  'https://tlmlyymsxihzbmksinfn.supabase.co';
 
-  function nowManila() {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: TIMEZONE }));
-  }
+const SUPABASE_KEY =
+  'sb_publishable_FWKNh4QI-Iw8sT-IzBcxcg_8epcmbmv';
 
-  function getSessionWindow() {
-    const now = nowManila();
-    const start = new Date(now);
-    if (now.getHours() < 18) {
-      start.setDate(start.getDate() - 1);
+const TIMEZONE = 'Asia/Manila';
+
+const MAX_HISTORY = 5;
+
+
+/* ============================================================
+   SUPABASE
+   ============================================================ */
+
+const sb =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* ============================================================
+   STATE
+   ============================================================ */
+
+const state = {
+
+  students: [],
+
+  attendance: {},
+
+  scanHistory: [],
+
+  filter: 'all',
+
+  searchQ: '',
+
+  attendanceDate: null,
+
+  mainChannel: null,
+
+  scanChannel: null,
+
+  scanTimer: null
+
+};
+
+
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+
+const el = {
+
+  loginScreen:
+    document.getElementById('login-screen'),
+
+  app:
+    document.getElementById('app'),
+
+  loginEmail:
+    document.getElementById('login-email'),
+
+  loginPassword:
+    document.getElementById('login-password'),
+
+  loginBtn:
+    document.getElementById('login-btn'),
+
+  loginError:
+    document.getElementById('login-error'),
+
+  loginLoading:
+    document.getElementById('login-loading'),
+
+  logoutBtn:
+    document.getElementById('logout-btn'),
+
+  clockTime:
+    document.getElementById('clock-time'),
+
+  clockDate:
+    document.getElementById('clock-date'),
+
+  connDot:
+    document.getElementById('conn-dot'),
+
+  connText:
+    document.getElementById('conn-text'),
+
+  statTotal:
+    document.getElementById('stat-total'),
+
+  statPresent:
+    document.getElementById('stat-present'),
+
+  statAbsent:
+    document.getElementById('stat-absent'),
+
+  statRate:
+    document.getElementById('stat-rate'),
+
+  studentGrid:
+    document.getElementById('student-grid'),
+
+  showingCount:
+    document.getElementById('showing-count'),
+
+  searchInput:
+    document.getElementById('search-input'),
+
+  refreshBtn:
+    document.getElementById('refresh-btn'),
+
+  addStudentBtn:
+    document.getElementById('add-student-btn'),
+
+  scanHero:
+    document.getElementById('scan-hero'),
+
+  scanContent:
+    document.getElementById('scan-content'),
+
+  historyList:
+    document.getElementById('history-list'),
+
+  printDate:
+    document.getElementById('print-date'),
+
+  printBtn:
+    document.getElementById('print-btn'),
+
+  modalOverlay:
+    document.getElementById('modal-overlay'),
+
+  modalCloseBtn:
+    document.getElementById('modal-close-btn'),
+
+  modalCancelBtn:
+    document.getElementById('modal-cancel-btn'),
+
+  modalSaveBtn:
+    document.getElementById('modal-save-btn'),
+
+  inpSid:
+    document.getElementById('inp-sid'),
+
+  inpName:
+    document.getElementById('inp-name'),
+
+  inpUid:
+    document.getElementById('inp-uid'),
+
+  inpSection:
+    document.getElementById('inp-section'),
+
+  scanUidBtn:
+    document.getElementById('scan-uid-btn'),
+
+  scanStatus:
+    document.getElementById('scan-status'),
+
+  toastContainer:
+    document.getElementById('toast-container')
+
+};
+
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function esc(value){
+
+  const div =
+    document.createElement('div');
+
+  div.textContent =
+    value == null ? '' : String(value);
+
+  return div.innerHTML;
+
+}
+
+
+function initials(name){
+
+  if(!name) return '?';
+
+  const parts =
+    name.trim().split(/\s+/);
+
+  if(parts.length === 1)
+    return parts[0][0].toUpperCase();
+
+  return (
+    parts[0][0] +
+    parts[parts.length - 1][0]
+  ).toUpperCase();
+
+}
+
+
+function manilaDate(){
+
+  return new Date().toLocaleDateString(
+    'en-CA',
+    {
+      timeZone: TIMEZONE
     }
-    start.setHours(18, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
-    end.setHours(17, 59, 59, 999);
-    return { start, end };
+  );
+
+}
+
+
+function formatTime(timestamp){
+
+  if(!timestamp) return '--';
+
+  return new Date(timestamp).toLocaleTimeString(
+    'en-US',
+    {
+      timeZone: TIMEZONE,
+      hour:'2-digit',
+      minute:'2-digit',
+      second:'2-digit',
+      hour12:true
+    }
+  );
+
+}
+
+
+function formatDate(date){
+
+  return new Date(date).toLocaleDateString(
+    'en-US',
+    {
+      timeZone:TIMEZONE,
+      weekday:'long',
+      year:'numeric',
+      month:'long',
+      day:'numeric'
+    }
+  );
+
+}
+
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+
+function toast(message,type='info'){
+
+  const item =
+    document.createElement('div');
+
+  item.className =
+    'toast ' + type;
+
+  item.textContent =
+    message;
+
+  el.toastContainer.appendChild(item);
+
+  setTimeout(
+    () => item.remove(),
+    3500
+  );
+
+}
+
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+
+async function login(){
+
+  const email =
+    el.loginEmail.value.trim();
+
+  const password =
+    el.loginPassword.value;
+
+  if(!email || !password){
+
+    showLoginError(
+      'Please enter your email and password.'
+    );
+
+    return;
+
   }
 
-  function inSession(tsString) {
-    const { start, end } = getSessionWindow();
-    const t = new Date(tsString);
-    const tManila = new Date(t.toLocaleString('en-US', { timeZone: TIMEZONE }));
-    return tManila >= start && tManila <= end;
-  }
+  el.loginBtn.disabled = true;
 
-  function formatTime(tsString) {
-    if (!tsString) return null;
-    return new Date(tsString).toLocaleTimeString('en-US', {
-      timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+  el.loginLoading.style.display =
+    'block';
+
+  el.loginError.classList.remove('show');
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.auth.signInWithPassword({
+      email,
+      password
     });
+
+
+  el.loginBtn.disabled = false;
+
+  el.loginLoading.style.display =
+    'none';
+
+
+  if(error){
+
+    showLoginError(
+      error.message
+    );
+
+    return;
+
   }
 
-  function formatDate(d) {
-    return d.toLocaleDateString('en-US', {
-      timeZone: TIMEZONE, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+
+  if(data.session){
+
+    showApp();
+
   }
 
-  function manilaDateStr(d) {
-    return d.toLocaleDateString('en-CA', { timeZone: TIMEZONE });
+}
+
+
+function showLoginError(message){
+
+  el.loginError.textContent =
+    message;
+
+  el.loginError.classList.add('show');
+
+}
+
+
+function showApp(){
+
+  el.loginScreen.style.display =
+    'none';
+
+  el.app.style.display =
+    'block';
+
+  initializeApp();
+
+}
+
+
+function showLogin(){
+
+  el.app.style.display =
+    'none';
+
+  el.loginScreen.style.display =
+    'flex';
+
+}
+
+
+async function logout(){
+
+  await sb.auth.signOut();
+
+  if(state.mainChannel){
+
+    try{
+      await state.mainChannel.unsubscribe();
+    }catch(e){}
+
+    state.mainChannel = null;
+
   }
 
-  function initials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  showLogin();
+
+}
+
+
+/* ============================================================
+   AUTH CHECK
+   ============================================================ */
+
+async function checkAuth(){
+
+  const {
+    data
+  } =
+    await sb.auth.getSession();
+
+  if(data.session){
+
+    showApp();
+
+  }else{
+
+    showLogin();
+
   }
 
-  function debounce(fn, ms) {
-    let tid;
-    return (...args) => { clearTimeout(tid); tid = setTimeout(() => fn(...args), ms); };
+}
+
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+
+function updateClock(){
+
+  const now =
+    new Date();
+
+  el.clockTime.textContent =
+    now.toLocaleTimeString(
+      'en-US',
+      {
+        timeZone:TIMEZONE,
+        hour12:true
+      }
+    );
+
+  el.clockDate.textContent =
+    formatDate(now);
+
+}
+
+
+/* ============================================================
+   CONNECTION
+   ============================================================ */
+
+function connectionStatus(status){
+
+  if(status === 'live'){
+
+    el.connDot.className =
+      'status-dot live';
+
+    el.connText.textContent =
+      'LIVE';
+
   }
 
-  function animateStat(elRef, newVal) {
-    if (elRef.textContent === String(newVal)) return;
-    elRef.textContent = newVal;
-    elRef.classList.remove('stat-changed');
-    void elRef.offsetWidth;
-    elRef.classList.add('stat-changed');
+  else if(status === 'error'){
+
+    el.connDot.className =
+      'status-dot error';
+
+    el.connText.textContent =
+      'ERROR';
+
   }
 
-  /* ============================================================
-     TOAST
-     ============================================================ */
-  function toast(msg, type = 'info', dur = 3500) {
-    const icons = {
-      success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
-      error:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-      info:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-    };
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-msg">${esc(msg)}</span>`;
-    el.toastContainer.appendChild(t);
-    setTimeout(() => {
-      t.classList.add('toast-out');
-      setTimeout(() => t.remove(), 280);
-    }, dur);
+  else{
+
+    el.connDot.className =
+      'status-dot';
+
+    el.connText.textContent =
+      'CONNECTING';
+
   }
 
-  /* ============================================================
-     CLOCK
-     ============================================================ */
-  function tickClock() {
-    const now = new Date();
-    el.clockTime.textContent = now.toLocaleTimeString('en-US', { timeZone: TIMEZONE, hour12: true });
-    el.clockDate.textContent = formatDate(now);
+}
+
+
+/* ============================================================
+   LOAD STUDENTS
+   ============================================================ */
+
+async function loadStudents(){
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from('students')
+      .select('*')
+      .order(
+        'student_id_number',
+        {
+          ascending:true
+        }
+      );
+
+
+  if(error){
+
+    toast(
+      'Failed to load students: ' +
+      error.message,
+      'error'
+    );
+
+    return;
+
   }
 
-  /* ============================================================
-     CONNECTION STATUS
-     ============================================================ */
-  function setConnStatus(status) {
-    // status: 'live' | 'error' | 'supabase-error' | 'connecting'
-    const cfg = {
-      live:           { dot:'live',  cls:'',      label:'LIVE' },
-      error:          { dot:'error', cls:'error', label:'Realtime Error' },
-      'supabase-error': { dot:'error', cls:'error', label:'Supabase Error' },
-      connecting:     { dot:'warn',  cls:'',      label:'Connecting' },
-    }[status] || { dot:'warn', cls:'', label:'Connecting' };
-    el.connDot.className   = `status-dot ${cfg.dot}`;
-    el.connText.textContent = cfg.label;
-    el.connStatus.className = `header-status ${cfg.cls}`;
-  }
 
-  /* ============================================================
-     DATA ACCESS
-     ============================================================ */
-  async function loadStudents() {
-    const { data, error } = await sb.from('students').select('*');
-    if (error) { toast('Failed to load students: ' + error.message, 'error'); return; }
-    state.students = data || [];
-  }
+  state.students =
+    data || [];
 
-  async function loadSessionAttendance() {
-    const { start, end } = getSessionWindow();
-    // Build ISO strings with Manila offset
-    const startISO = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().replace('Z', '+08:00');
-    // Use UTC equivalents for the query (Supabase stores UTC)
-    const utcStart = start.getTime() - (8 * 3600000);
-    const utcEnd   = end.getTime()   - (8 * 3600000);
-    const sDate = new Date(utcStart).toISOString();
-    const eDate = new Date(utcEnd).toISOString();
+}
 
-    const { data, error } = await sb
+
+/* ============================================================
+   LOAD ATTENDANCE FOR DATE
+   ============================================================ */
+
+async function loadAttendance(dateValue){
+
+  if(!dateValue)
+    dateValue =
+      manilaDate();
+
+
+  const start =
+    `${dateValue}T00:00:00+08:00`;
+
+  const end =
+    `${dateValue}T23:59:59+08:00`;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
       .from('attendance_records')
       .select('*')
-      .gte('timestamp', sDate)
-      .lte('timestamp', eDate)
-      .order('timestamp', { ascending: true });
-    if (error) { toast('Failed to load attendance: ' + error.message, 'error'); return; }
-    state.attendance  = {};
-    state.attendedIds = new Set();
-    (data || []).forEach(row => applyAttendanceRow(row));
-  }
-
-  function applyAttendanceRow(row) {
-    if (state.attendedIds.has(row.id)) return; // dedup
-    state.attendedIds.add(row.id);
-    const uid = row.scanned_rfid;
-    const st  = (row.status || '').toLowerCase().trim();
-    const existing = state.attendance[uid];
-    if (!existing) {
-      state.attendance[uid] = {
-        status: st,
-        inTime:  (st === 'present') ? row.timestamp : null,
-        outTime: (st === 'time out' || st === 'timeout') ? row.timestamp : null,
-        id: row.id,
-      };
-    } else {
-      if (st === 'present' && !existing.inTime)  existing.inTime  = row.timestamp;
-      if ((st === 'time out' || st === 'timeout') && !existing.outTime) existing.outTime = row.timestamp;
-      if (st === 'time out' || st === 'timeout')  existing.status  = st;
-    }
-  }
-
-  /* ============================================================
-     RENDER — STUDENT GRID
-     ============================================================ */
-  function renderSkeletons(count = 8) {
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < count; i++) {
-      const card = document.createElement('div');
-      card.className = 'skeleton-card';
-      card.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <div class="skeleton skel-row skel-avatar"></div>
-          <div style="flex:1">
-            <div class="skeleton skel-row skel-w-80" style="margin-bottom:6px"></div>
-            <div class="skeleton skel-row skel-w-40"></div>
-          </div>
-        </div>
-        <div class="skeleton skel-row skel-w-60"></div>`;
-      frag.appendChild(card);
-    }
-    el.studentGrid.innerHTML = '';
-    el.studentGrid.appendChild(frag);
-  }
-
-  function getFilteredStudents() {
-    const q = state.searchQ.toLowerCase();
-    return state.students.filter(s => {
-      // Status filter
-      const att = state.attendance[s.rfid_uid];
-      const isPresent = !!att;
-      if (state.filter === 'present' && !isPresent) return false;
-      if (state.filter === 'absent'  &&  isPresent) return false;
-      // Search
-      if (!q) return true;
-      return (s.full_name || '').toLowerCase().includes(q)
-          || (s.student_id_number || '').toLowerCase().includes(q)
-          || (s.course_section || '').toLowerCase().includes(q);
-    });
-  }
-
-  function renderGrid() {
-    const filtered = getFilteredStudents();
-    const total    = state.students.length;
-    const present  = Object.keys(state.attendance).filter(uid =>
-      state.students.some(s => s.rfid_uid === uid)
-    ).length;
-    const absent   = total - present;
-    const rate     = total > 0 ? Math.round((present / total) * 100) : 0;
-
-    animateStat(el.statTotal,   total);
-    animateStat(el.statPresent, present);
-    animateStat(el.statAbsent,  absent);
-    animateStat(el.statRate,    rate + '%');
-
-    el.showingCount.textContent = `Showing ${filtered.length} of ${total}`;
-
-    if (state.isLoading) { renderSkeletons(); return; }
-
-    if (filtered.length === 0) {
-      el.studentGrid.innerHTML = `
-        <div class="empty-state">
-          <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <div class="empty-title">${state.students.length === 0 ? 'No students enrolled yet' : 'No students match your filter'}</div>
-          <div class="empty-sub">${state.students.length === 0 ? 'Add students using the button above.' : 'Try adjusting your search or filter.'}</div>
-        </div>`;
-      return;
-    }
-
-    const frag = document.createDocumentFragment();
-    filtered.forEach((s, i) => {
-      const att       = state.attendance[s.rfid_uid];
-      const isPresent = !!att;
-      const card      = document.createElement('div');
-      card.className  = `student-card ${isPresent ? 'present-card' : 'absent-card'}`;
-      card.style.animationDelay = `${Math.min(i * 25, 300)}ms`;
-
-      const inTime  = att ? formatTime(att.inTime)  : null;
-      const outTime = att ? formatTime(att.outTime) : null;
-      const statusText = !att ? 'Absent'
-        : (att.outTime ? 'Timed Out' : 'Present');
-
-      card.innerHTML = `
-        <div class="student-card-header">
-          <div class="student-avatar">${esc(initials(s.full_name))}</div>
-          <div class="student-info">
-            <div class="student-name" title="${esc(s.full_name)}">${esc(s.full_name)}</div>
-            <div class="student-id">${esc(s.student_id_number)}</div>
-          </div>
-          <span class="status-badge ${isPresent ? 'badge-present' : 'badge-absent'}">${esc(statusText)}</span>
-        </div>
-        ${s.course_section ? `<div class="student-section">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          ${esc(s.course_section)}</div>` : ''}
-        <div class="student-times">
-          <div class="time-block">
-            <div class="time-block-label">Time In</div>
-            <div class="time-block-val ${inTime ? '' : 'empty'}">${inTime || '--:-- --'}</div>
-          </div>
-          <div class="time-block">
-            <div class="time-block-label">Time Out</div>
-            <div class="time-block-val ${outTime ? '' : 'empty'}">${outTime || '--:-- --'}</div>
-          </div>
-        </div>`;
-      frag.appendChild(card);
-    });
-
-    el.studentGrid.innerHTML = '';
-    el.studentGrid.appendChild(frag);
-  }
-
-  /* ============================================================
-     RENDER — SCAN HERO + HISTORY
-     ============================================================ */
-  function renderScanHero(scan) {
-    if (!scan) {
-      el.scanContent.innerHTML = `
-        <div class="scan-idle">
-          <svg class="scan-idle-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          <div class="scan-idle-text">Waiting for card tap...</div>
-        </div>`;
-      return;
-    }
-    const pillClass = scan.type === 'present' ? 'pill-present'
-                    : scan.type === 'timeout'  ? 'pill-timeout'
-                    : 'pill-unknown';
-    const pillText  = scan.type === 'present' ? 'Present - Time In'
-                    : scan.type === 'timeout'  ? 'Time Out'
-                    : 'Not Registered';
-    const metaLine  = scan.type === 'unknown'
-      ? `UID: ${esc(scan.uid)}`
-      : `${esc(scan.studentId)} &bull; ${esc(scan.section || 'No section')}`;
-
-    el.scanContent.innerHTML = `
-      <div class="scan-result">
-        <div class="scan-name">${esc(scan.name)}</div>
-        <div class="scan-meta">${metaLine}</div>
-        <span class="scan-pill ${pillClass}">${pillText}</span>
-        <div class="scan-time-label">${esc(scan.timeLabel)}</div>
-      </div>`;
-
-    // Flash animation
-    el.scanHero.classList.remove('flash');
-    void el.scanHero.offsetWidth;
-    el.scanHero.classList.add('flash');
-  }
-
-  function renderHistory() {
-    if (state.scanHistory.length === 0) {
-      el.historyList.innerHTML = '<div class="history-empty">No scans this session</div>';
-      return;
-    }
-    const frag = document.createDocumentFragment();
-    state.scanHistory.forEach(scan => {
-      const item = document.createElement('div');
-      item.className = 'history-item';
-      const dotClass = scan.type === 'present' ? 'dot-present'
-                     : scan.type === 'timeout'  ? 'dot-timeout'
-                     : 'dot-unknown';
-      const badgeClass = scan.type === 'present' ? 'hb-present'
-                       : scan.type === 'timeout'  ? 'hb-timeout'
-                       : 'hb-unknown';
-      const badgeText = scan.type === 'present' ? 'IN'
-                      : scan.type === 'timeout'  ? 'OUT'
-                      : 'N/A';
-      item.innerHTML = `
-        <div class="history-dot ${dotClass}"></div>
-        <div class="history-info">
-          <div class="history-name">${esc(scan.name)}</div>
-          <div class="history-time">${esc(scan.timeLabel)}</div>
-        </div>
-        <span class="history-badge ${badgeClass}">${badgeText}</span>`;
-      frag.appendChild(item);
-    });
-    el.historyList.innerHTML = '';
-    el.historyList.appendChild(frag);
-  }
-
-  /* ============================================================
-     BEEP via WebAudio
-     ============================================================ */
-  function playBeep() {
-    if (!state.soundOn) return;
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.22);
-    } catch (e) { /* silent fail */ }
-  }
-
-  /* ============================================================
-     REALTIME — MAIN ATTENDANCE CHANNEL
-     ============================================================ */
-  function subscribeAttendance() {
-    if (state.mainChannel) {
-      try { state.mainChannel.unsubscribe(); } catch(e) {}
-    }
-    setConnStatus('connecting');
-    state.mainChannel = sb.channel('attendance_realtime');
-    state.mainChannel
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'attendance_records',
-      }, handleNewAttendanceRow)
-      .subscribe(status => {
-        if (status === 'SUBSCRIBED')   setConnStatus('live');
-        else if (status === 'CLOSED')  setConnStatus('error');
-        else if (status === 'CHANNEL_ERROR') setConnStatus('error');
-        else setConnStatus('connecting');
-      });
-  }
-
-  function handleNewAttendanceRow(payload) {
-    const row = payload.new;
-    if (!row || !inSession(row.timestamp)) return;
-
-    applyAttendanceRow(row);
-
-    // Determine student
-    const uid  = row.scanned_rfid;
-    const st   = (row.status || '').toLowerCase().trim();
-    const student = state.students.find(s => s.rfid_uid === uid);
-
-    let scan;
-    if (!student) {
-      scan = { type:'unknown', name:'Unknown Card', uid, studentId:'', section:'', timeLabel: formatTime(row.timestamp) };
-    } else {
-      const type = (st === 'present') ? 'present'
-                 : (st === 'time out' || st === 'timeout') ? 'timeout'
-                 : 'unknown';
-      scan = { type, name: student.full_name, uid, studentId: student.student_id_number, section: student.course_section, timeLabel: formatTime(row.timestamp) };
-    }
-
-    // Update history (newest first)
-    state.scanHistory.unshift(scan);
-    if (state.scanHistory.length > MAX_HISTORY) state.scanHistory.pop();
-
-    renderScanHero(scan);
-    renderHistory();
-    renderGrid();
-    playBeep();
-  }
-
-  /* ============================================================
-     LOAD / REFRESH
-     ============================================================ */
-  async function fullRefresh() {
-    state.isLoading = true;
-    renderSkeletons();
-    el.refreshBtn.querySelector('svg').classList.add('spinning');
-    el.refreshBtn.disabled = true;
-
-    await Promise.all([loadStudents(), loadSessionAttendance()]);
-
-    state.isLoading = false;
-    renderGrid();
-    el.refreshBtn.querySelector('svg').classList.remove('spinning');
-    el.refreshBtn.disabled = false;
-    subscribeAttendance();
-  }
-
-  /* ============================================================
-     SEARCH & FILTER
-     ============================================================ */
-  const debouncedSearch = debounce(q => {
-    state.searchQ = q;
-    renderGrid();
-  }, SEARCH_DEBOUNCE);
-
-  function setFilter(f) {
-    state.filter = f;
-    document.querySelectorAll('.chip').forEach(c => {
-      const active = c.dataset.filter === f;
-      c.classList.toggle('active', active);
-      c.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    renderGrid();
-  }
-
-  /* ============================================================
-     ADD STUDENT MODAL
-     ============================================================ */
-  let focusableEls = [];
-  let prevFocus;
-
-  function openModal() {
-    const pwd = prompt('Enter teacher password:');
-    if (pwd === null) return;
-    if (pwd !== TEACHER_PASSWORD) { toast('Incorrect password.', 'error'); return; }
-
-    prevFocus = document.activeElement;
-    el.inpSid.value = '';
-    el.inpName.value = '';
-    el.inpUid.value = '';
-    el.inpSection.value = '';
-    el.scanStatus.textContent = '';
-    el.modalOverlay.classList.add('open');
-
-    focusableEls = Array.from(el.modalBox.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )).filter(e => !e.disabled);
-    el.inpSid.focus();
-  }
-
-  function closeModal() {
-    cancelScanUid();
-    el.modalOverlay.classList.remove('open');
-    if (prevFocus) prevFocus.focus();
-  }
-
-  function trapFocus(e) {
-    if (!el.modalOverlay.classList.contains('open')) return;
-    if (e.key !== 'Tab') return;
-    const first = focusableEls[0];
-    const last  = focusableEls[focusableEls.length - 1];
-    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-    else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
-  }
-
-  /* ---- Scan UID in modal ---- */
-  let scanChannel = null;
-
-  function startScanUid() {
-    if (scanChannel) { cancelScanUid(); return; }
-    el.scanStatus.textContent   = 'Tap the RFID card now...';
-    el.scanStatus.className     = 'scan-status-text detecting';
-    el.scanUidBtn.textContent   = 'Cancel';
-
-    scanChannel = sb.channel('unregistered_scan_modal');
-    scanChannel.on('postgres_changes', {
-      event: 'INSERT', schema: 'public', table: 'unregistered_scans',
-    }, payload => {
-      const uid = (payload.new.rfid_uid || '').replace(/[^0-9a-fA-F]/g, '').toUpperCase();
-      el.inpUid.value         = uid;
-      el.scanStatus.textContent = `Card detected: ${uid}`;
-      el.scanStatus.className   = 'scan-status-text detected';
-      toast(`Card detected: ${uid}`, 'success');
-      cancelScanUid(false);
-    }).subscribe();
-
-    state.scanTimerId = setTimeout(() => {
-      if (scanChannel) {
-        el.scanStatus.textContent = 'No card detected.';
-        el.scanStatus.className   = 'scan-status-text failed';
-        cancelScanUid(false);
-      }
-    }, SCAN_TIMEOUT_MS);
-  }
-
-  function cancelScanUid(updateText = true) {
-    clearTimeout(state.scanTimerId);
-    if (scanChannel) {
-      try { scanChannel.unsubscribe(); } catch(e) {}
-      scanChannel = null;
-    }
-    if (updateText) {
-      el.scanStatus.textContent = el.inpUid.value ? '' : 'Cancelled.';
-      el.scanStatus.className   = 'scan-status-text failed';
-    }
-    el.scanUidBtn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
-      </svg> Scan ID`;
-  }
-
-  async function saveStudent() {
-    const sid     = el.inpSid.value.trim();
-    const name    = el.inpName.value.trim();
-    const uid     = el.inpUid.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
-    const section = el.inpSection.value.trim();
-
-    if (!sid || !name || !uid) { toast('Please fill in all required fields.', 'error'); return; }
-
-    el.modalSaveBtn.disabled = true;
-    el.modalSaveBtn.textContent = 'Saving...';
-
-    const { data, error } = await sb.from('students').insert([{
-      student_id_number: sid,
-      full_name: name,
-      rfid_uid: uid,
-      course_section: section || null,
-    }]).select().single();
-
-    el.modalSaveBtn.disabled = false;
-    el.modalSaveBtn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-      </svg> Save Student`;
-
-    if (error) {
-      if (error.code === '23505') toast('Student ID or RFID UID already exists.', 'error');
-      else toast('Error saving student: ' + error.message, 'error');
-      return;
-    }
-
-    state.students.push(data);
-    state.students.sort((a, b) => (a.student_id_number || '').localeCompare(b.student_id_number || '', undefined, { numeric: true }));
-    toast(`Student "${name}" added successfully.`, 'success');
-    closeModal();
-    renderGrid();
-  }
-
-  /* ============================================================
-     PRINT
-     ============================================================ */
-  async function doPrint() {
-    const dateVal = el.printDate.value;
-    if (!dateVal) { toast('Please select a date.', 'error'); return; }
-
-    const originalHTML = el.printBtn.innerHTML;
-    el.printBtn.disabled = true;
-    el.printBtn.textContent = 'Creating PDF...';
-
-    try {
-      const dayStart = `${dateVal}T00:00:00+08:00`;
-      const dayEnd   = `${dateVal}T23:59:59+08:00`;
-
-      const { data, error } = await sb.from('attendance_records')
-        .select('*')
-        .gte('timestamp', dayStart)
-        .lte('timestamp', dayEnd)
-        .order('timestamp', { ascending: true });
-
-      if (error) throw error;
-
-      const dayAtt = {};
-      (data || []).forEach(row => {
-        const uid = row.scanned_rfid;
-        const st = (row.status || '').toLowerCase().trim();
-        if (!dayAtt[uid]) dayAtt[uid] = { inTime:null, outTime:null };
-        if (st === 'present' && !dayAtt[uid].inTime) dayAtt[uid].inTime = row.timestamp;
-        if ((st === 'time out' || st === 'timeout') && !dayAtt[uid].outTime) dayAtt[uid].outTime = row.timestamp;
-      });
-
-      let presentCount = 0, absentCount = 0;
-      const tableRows = state.students.map((s, i) => {
-        const att = dayAtt[s.rfid_uid];
-        const present = !!att;
-        if (present) presentCount++; else absentCount++;
-        return [
-          String(i + 1),
-          String(s.student_id_number || '--'),
-          String(s.full_name || '--'),
-          String(s.course_section || '--'),
-          !att ? 'Absent' : (att.outTime ? 'Timed Out' : 'Present'),
-          att && att.inTime ? formatTime(att.inTime) : '--',
-          att && att.outTime ? formatTime(att.outTime) : '--'
-        ];
-      });
-
-      // Generate the PDF directly. This avoids window.print(), which is
-      // unreliable when called after an asynchronous Supabase request on phones.
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error('PDF library did not load. Check your internet connection and reload the page.');
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-      const printDate = new Date(dateVal + 'T12:00:00+08:00');
-      const dateLabel = formatDate(printDate);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(20);
-      doc.setTextColor(142, 0, 0);
-      doc.text('GLOBAL ACADEMY', 14, 16);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(80, 80, 80);
-      doc.text('SMART RFID ATTENDANCE REPORT', 14, 22);
-      doc.text(dateLabel, 14, 28);
-
-      doc.setFontSize(9);
-      doc.text(`Total: ${state.students.length}    Present: ${presentCount}    Absent: ${absentCount}    Rate: ${state.students.length ? Math.round((presentCount/state.students.length)*100) : 0}%`, 14, 35);
-
-      doc.autoTable({
-        startY: 40,
-        head: [['No.', 'Student ID', 'Name', 'Course / Section', 'Status', 'Time In', 'Time Out']],
-        body: tableRows,
-        theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2.2, textColor: [30,30,30] },
-        headStyles: { fillColor: [142,0,0], textColor: [255,255,255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [253,245,245] },
-        columnStyles: { 0:{cellWidth:10}, 1:{cellWidth:28}, 2:{cellWidth:58}, 3:{cellWidth:45}, 4:{cellWidth:25}, 5:{cellWidth:25}, 6:{cellWidth:25} },
-        didParseCell: function(cell) {
-          if (cell.section === 'body' && cell.column.index === 4) {
-            if (cell.cell.raw === 'Present') cell.cell.styles.textColor = [26,122,74];
-            if (cell.cell.raw === 'Absent') cell.cell.styles.textColor = [130,130,130];
-            if (cell.cell.raw === 'Timed Out') cell.cell.styles.textColor = [196,122,0];
-          }
+      .gte('timestamp',start)
+      .lte('timestamp',end)
+      .order(
+        'timestamp',
+        {
+          ascending:true
         }
-      });
+      );
 
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let page = 1; page <= pageCount; page++) {
-        doc.setPage(page);
-        doc.setFontSize(7);
-        doc.setTextColor(130,130,130);
-        doc.text('Generated by Smart RFID Attendance System', 14, 202);
-        doc.text(`Page ${page} of ${pageCount}`, 283, 202, { align:'right' });
-      }
 
-      // Open the generated PDF in a new tab when possible. If the phone blocks
-      // the tab, automatically download the PDF instead.
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      const opened = window.open(url, '_blank');
+  if(error){
 
-      if (!opened) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Global_Academy_Attendance_${dateVal}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        toast('PDF created. Open the downloaded PDF to print.', 'success');
-      } else {
-        toast('PDF opened. Use your phone\'s Share/Print option.', 'success');
-      }
+    toast(
+      'Failed to load attendance: ' +
+      error.message,
+      'error'
+    );
 
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (err) {
-      console.error(err);
-      toast('Failed to create PDF: ' + (err.message || err), 'error');
-    } finally {
-      el.printBtn.disabled = false;
-      el.printBtn.innerHTML = originalHTML;
-    }
+    return;
+
   }
 
-  /* ============================================================
-     DEFAULT PRINT DATE
-     ============================================================ */
-  function setDefaultPrintDate() {
-    el.printDate.value = manilaDateStr(new Date());
-  }
 
-  /* ============================================================
-     VISIBILITY / RECONNECT
-     ============================================================ */
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      fullRefresh();
+  state.attendance = {};
+
+
+  (data || []).forEach(row => {
+
+    const uid =
+      row.scanned_rfid;
+
+    const status =
+      String(row.status || '')
+        .toLowerCase()
+        .trim();
+
+
+    if(!state.attendance[uid]){
+
+      state.attendance[uid] = {
+
+        inTime:null,
+
+        outTime:null,
+
+        status:'Present',
+
+        id:row.id
+
+      };
+
     }
+
+
+    if(
+      status === 'present'
+      &&
+      !state.attendance[uid].inTime
+    ){
+
+      state.attendance[uid].inTime =
+        row.timestamp;
+
+    }
+
+
+    if(
+      status === 'time out'
+      ||
+      status === 'timeout'
+    ){
+
+      state.attendance[uid].outTime =
+        row.timestamp;
+
+      state.attendance[uid].status =
+        'Time Out';
+
+    }
+
   });
 
-  /* ============================================================
-     EVENTS
-     ============================================================ */
-  function bindEvents() {
-    // Clock
-    tickClock();
-    setInterval(tickClock, 1000);
 
-    // Search
-    el.searchInput.addEventListener('input', e => {
-      const q = e.target.value;
-      el.searchClear.classList.toggle('visible', !!q);
-      debouncedSearch(q);
+  state.attendanceDate =
+    dateValue;
+
+
+  renderGrid();
+
+}
+
+
+/* ============================================================
+   RENDER GRID
+   ============================================================ */
+
+function renderGrid(){
+
+  const search =
+    state.searchQ
+      .toLowerCase()
+      .trim();
+
+
+  const filtered =
+    state.students.filter(student => {
+
+      const attendance =
+        state.attendance[
+          student.rfid_uid
+        ];
+
+      const present =
+        !!attendance;
+
+
+      if(
+        state.filter === 'present'
+        &&
+        !present
+      )
+        return false;
+
+
+      if(
+        state.filter === 'absent'
+        &&
+        present
+      )
+        return false;
+
+
+      if(!search)
+        return true;
+
+
+      return (
+
+        String(
+          student.full_name || ''
+        )
+        .toLowerCase()
+        .includes(search)
+
+        ||
+
+        String(
+          student.student_id_number || ''
+        )
+        .toLowerCase()
+        .includes(search)
+
+        ||
+
+        String(
+          student.course_section || ''
+        )
+        .toLowerCase()
+        .includes(search)
+
+      );
+
     });
-    el.searchClear.addEventListener('click', () => {
-      el.searchInput.value = '';
-      el.searchClear.classList.remove('visible');
-      state.searchQ = '';
-      renderGrid();
-      el.searchInput.focus();
-    });
 
-    // Filter chips
-    document.querySelectorAll('.chip').forEach(c => {
-      c.addEventListener('click', () => setFilter(c.dataset.filter));
-    });
 
-    // Refresh
-    el.refreshBtn.addEventListener('click', () => fullRefresh().then(() => toast('Data refreshed.', 'success')));
+  const total =
+    state.students.length;
 
-    // Add student
-    el.addStudentBtn.addEventListener('click', openModal);
-    el.modalCloseBtn.addEventListener('click', closeModal);
-    el.modalCancelBtn.addEventListener('click', closeModal);
-    el.modalSaveBtn.addEventListener('click', saveStudent);
-    el.modalOverlay.addEventListener('click', e => { if (e.target === el.modalOverlay) closeModal(); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && el.modalOverlay.classList.contains('open')) closeModal();
-      trapFocus(e);
-    });
 
-    // Scan UID toggle
-    el.scanUidBtn.addEventListener('click', startScanUid);
+  const present =
+    state.students.filter(
+      student =>
+        !!state.attendance[
+          student.rfid_uid
+        ]
+    ).length;
 
-    // UID sanitize on input
-    el.inpUid.addEventListener('input', () => {
-      const clean = el.inpUid.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
-      if (el.inpUid.value !== clean) el.inpUid.value = clean;
-    });
 
-    // Enter to save in modal
-    [el.inpSid, el.inpName, el.inpUid, el.inpSection].forEach(inp => {
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveStudent(); });
-    });
+  const absent =
+    total - present;
 
-    // Sound toggle
-    el.soundToggle.addEventListener('click', () => {
-      state.soundOn = !state.soundOn;
-      el.toggleTrack.classList.toggle('on', state.soundOn);
-      el.soundToggle.setAttribute('aria-pressed', state.soundOn ? 'true' : 'false');
-    });
 
-    // Print
-    el.printBtn.addEventListener('click', doPrint);
+  const rate =
+    total
+      ? Math.round(
+          present / total * 100
+        )
+      : 0;
+
+
+  el.statTotal.textContent =
+    total;
+
+  el.statPresent.textContent =
+    present;
+
+  el.statAbsent.textContent =
+    absent;
+
+  el.statRate.textContent =
+    rate + '%';
+
+
+  el.showingCount.textContent =
+    `Showing ${filtered.length} of ${total}`;
+
+
+  if(!filtered.length){
+
+    el.studentGrid.innerHTML = `
+
+      <div style="
+        grid-column:1/-1;
+        text-align:center;
+        padding:50px 20px;
+        color:var(--text-muted);
+      ">
+
+        <div style="font-size:45px">
+          👨‍🎓
+        </div>
+
+        <div style="
+          font-weight:bold;
+          margin-top:10px;
+          color:var(--text-secondary);
+        ">
+          ${
+            total
+              ? 'No students match your search.'
+              : 'No students enrolled yet.'
+          }
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
   }
 
-  /* ============================================================
-     INIT
-     ============================================================ */
-  async function init() {
-    setDefaultPrintDate();
-    bindEvents();
-    state.isLoading = true;
-    renderSkeletons(8);
-    setConnStatus('connecting');
-    try {
-      await Promise.all([loadStudents(), loadSessionAttendance()]);
-      state.isLoading = false;
-      renderGrid();
-      renderHistory();
-      subscribeAttendance();
-    } catch(e) {
-      state.isLoading = false;
-      setConnStatus('supabase-error');
-      toast('Connection error. Please refresh.', 'error');
-      renderGrid();
+
+  const fragment =
+    document.createDocumentFragment();
+
+
+  filtered.forEach(student => {
+
+    const attendance =
+      state.attendance[
+        student.rfid_uid
+      ];
+
+
+    const present =
+      !!attendance;
+
+
+    const card =
+      document.createElement('div');
+
+
+    card.className =
+      'student-card ' +
+      (
+        present
+          ? 'present-card'
+          : 'absent-card'
+      );
+
+
+    const status =
+      !present
+        ? 'Absent'
+        : attendance.outTime
+          ? 'Timed Out'
+          : 'Present';
+
+
+    const inTime =
+      attendance
+        ? formatTime(
+            attendance.inTime
+          )
+        : '--:-- --';
+
+
+    const outTime =
+      attendance
+        ? formatTime(
+            attendance.outTime
+          )
+        : '--:-- --';
+
+
+    card.innerHTML = `
+
+      <div class="student-card-header">
+
+        <div class="student-avatar">
+          ${esc(initials(student.full_name))}
+        </div>
+
+        <div class="student-info">
+
+          <div
+            class="student-name"
+            title="${esc(student.full_name)}"
+          >
+            ${esc(student.full_name)}
+          </div>
+
+          <div class="student-id">
+            ${esc(student.student_id_number)}
+          </div>
+
+        </div>
+
+        <span class="
+          status-badge
+          ${
+            present
+              ? 'badge-present'
+              : 'badge-absent'
+          }
+        ">
+          ${status}
+        </span>
+
+      </div>
+
+
+      ${
+        student.course_section
+          ? `
+            <div class="student-section">
+              🎓
+              ${esc(student.course_section)}
+            </div>
+          `
+          : ''
+      }
+
+
+      <div class="student-times">
+
+        <div>
+
+          <div class="time-block-label">
+            Time In
+          </div>
+
+          <div class="time-block-val">
+            ${inTime}
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="time-block-label">
+            Time Out
+          </div>
+
+          <div class="time-block-val">
+            ${outTime}
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="delete-student"
+        data-id="${student.id}"
+        data-name="${esc(student.full_name)}"
+      >
+        Delete Student
+      </button>
+
+    `;
+
+
+    card
+      .querySelector('.delete-student')
+      .addEventListener(
+        'click',
+        () =>
+          deleteStudent(
+            student.id,
+            student.full_name
+          )
+      );
+
+
+    fragment.appendChild(card);
+
+  });
+
+
+  el.studentGrid.innerHTML = '';
+
+  el.studentGrid.appendChild(
+    fragment
+  );
+
+}
+
+
+/* ============================================================
+   DELETE STUDENT
+   ============================================================ */
+
+async function deleteStudent(
+  id,
+  name
+){
+
+  const confirmed =
+    confirm(
+      `Delete "${name}" from the student list?\n\nThis action cannot be undone.`
+    );
+
+
+  if(!confirmed)
+    return;
+
+
+  const {
+    error
+  } =
+    await sb
+      .from('students')
+      .delete()
+      .eq('id',id);
+
+
+  if(error){
+
+    toast(
+      'Failed to delete student: ' +
+      error.message,
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  state.students =
+    state.students.filter(
+      student =>
+        student.id !== id
+    );
+
+
+  renderGrid();
+
+
+  toast(
+    `${name} deleted successfully.`,
+    'success'
+  );
+
+}
+
+
+/* ============================================================
+   ADD STUDENT
+   ============================================================ */
+
+function openModal(){
+
+  el.inpSid.value = '';
+
+  el.inpName.value = '';
+
+  el.inpUid.value = '';
+
+  el.inpSection.value = '';
+
+  el.scanStatus.textContent = '';
+
+  el.modalOverlay.classList.add(
+    'open'
+  );
+
+  el.inpSid.focus();
+
+}
+
+
+function closeModal(){
+
+  stopRFIDScan();
+
+  el.modalOverlay.classList.remove(
+    'open'
+  );
+
+}
+
+
+async function saveStudent(){
+
+  const studentId =
+    el.inpSid.value.trim();
+
+  const name =
+    el.inpName.value.trim();
+
+  const uid =
+    el.inpUid.value
+      .replace(
+        /[^0-9a-fA-F]/g,
+        ''
+      )
+      .toUpperCase();
+
+  const section =
+    el.inpSection.value.trim();
+
+
+  if(
+    !studentId ||
+    !name ||
+    !uid
+  ){
+
+    toast(
+      'Please complete all required fields.',
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  el.modalSaveBtn.disabled =
+    true;
+
+  el.modalSaveBtn.textContent =
+    'Saving...';
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from('students')
+      .insert({
+
+        student_id_number:
+          studentId,
+
+        full_name:
+          name,
+
+        rfid_uid:
+          uid,
+
+        course_section:
+          section || null
+
+      })
+      .select()
+      .single();
+
+
+  el.modalSaveBtn.disabled =
+    false;
+
+  el.modalSaveBtn.textContent =
+    'Save Student';
+
+
+  if(error){
+
+    if(error.code === '23505'){
+
+      toast(
+        'Student ID or RFID UID already exists.',
+        'error'
+      );
+
+    }else{
+
+      toast(
+        'Error saving student: ' +
+        error.message,
+        'error'
+      );
+
     }
+
+    return;
+
   }
 
-  init();
+
+  state.students.push(data);
+
+
+  state.students.sort(
+    (a,b) =>
+      String(
+        a.student_id_number
+      ).localeCompare(
+        String(
+          b.student_id_number
+        ),
+        undefined,
+        {
+          numeric:true
+        }
+      )
+  );
+
+
+  closeModal();
+
+  renderGrid();
+
+
+  toast(
+    `${name} added successfully.`,
+    'success'
+  );
+
+}
+
+
+/* ============================================================
+   RFID REGISTRATION SCAN
+   ============================================================ */
+
+function startRFIDScan(){
+
+  if(state.scanChannel){
+
+    stopRFIDScan();
+
+    return;
+
+  }
+
+
+  el.scanStatus.textContent =
+    'Tap the RFID card now...';
+
+  el.scanStatus.className =
+    'scan-status-text detecting';
+
+
+  el.scanUidBtn.textContent =
+    'Cancel';
+
+
+  state.scanChannel =
+    sb.channel(
+      'rfid_registration'
+    );
+
+
+  state.scanChannel
+    .on(
+      'postgres_changes',
+      {
+        event:'INSERT',
+        schema:'public',
+        table:'unregistered_scans'
+      },
+      payload => {
+
+        const uid =
+          String(
+            payload.new.rfid_uid || ''
+          )
+          .replace(
+            /[^0-9a-fA-F]/g,
+            ''
+          )
+          .toUpperCase();
+
+
+        if(!uid)
+          return;
+
+
+        el.inpUid.value =
+          uid;
+
+
+        el.scanStatus.textContent =
+          `Card detected: ${uid}`;
+
+        el.scanStatus.className =
+          'scan-status-text detected';
+
+
+        toast(
+          'RFID card detected.',
+          'success'
+        );
+
+
+        stopRFIDScan();
+
+      }
+    )
+    .subscribe();
+
+
+  state.scanTimer =
+    setTimeout(
+      () => {
+
+        if(state.scanChannel){
+
+          el.scanStatus.textContent =
+            'No card detected.';
+
+          el.scanStatus.className =
+            'scan-status-text failed';
+
+          stopRFIDScan();
+
+        }
+
+      },
+      30000
+    );
+
+}
+
+
+async function stopRFIDScan(){
+
+  clearTimeout(
+    state.scanTimer
+  );
+
+
+  if(state.scanChannel){
+
+    try{
+
+      await state.scanChannel.unsubscribe();
+
+    }catch(e){}
+
+    state.scanChannel =
+      null;
+
+  }
+
+
+  el.scanUidBtn.innerHTML =
+    '💳 Scan ID';
+
+}
+
+
+/* ============================================================
+   REALTIME ATTENDANCE
+   ============================================================ */
+
+function subscribeAttendance(){
+
+  if(state.mainChannel){
+
+    try{
+      state.mainChannel.unsubscribe();
+    }catch(e){}
+
+  }
+
+
+  connectionStatus(
+    'connecting'
+  );
+
+
+  state.mainChannel =
+    sb.channel(
+      'attendance_live'
+    );
+
+
+  state.mainChannel
+    .on(
+      'postgres_changes',
+      {
+        event:'INSERT',
+        schema:'public',
+        table:'attendance_records'
+      },
+      handleAttendance
+    )
+    .subscribe(
+      status => {
+
+        if(status === 'SUBSCRIBED'){
+
+          connectionStatus(
+            'live'
+          );
+
+        }
+
+        else if(
+          status === 'CHANNEL_ERROR'
+          ||
+          status === 'CLOSED'
+        ){
+
+          connectionStatus(
+            'error'
+          );
+
+        }
+
+      }
+    );
+
+}
+
+
+/* ============================================================
+   HANDLE NEW ATTENDANCE
+   ============================================================ */
+
+async function handleAttendance(
+  payload
+){
+
+  const row =
+    payload.new;
+
+
+  if(!row)
+    return;
+
+
+  const rowDate =
+    new Date(
+      row.timestamp
+    ).toLocaleDateString(
+      'en-CA',
+      {
+        timeZone:TIMEZONE
+      }
+    );
+
+
+  if(
+    rowDate !==
+    state.attendanceDate
+  )
+    return;
+
+
+  await loadAttendance(
+    state.attendanceDate
+  );
+
+
+  const student =
+    state.students.find(
+      s =>
+        s.rfid_uid ===
+        row.scanned_rfid
+    );
+
+
+  const status =
+    String(
+      row.status || ''
+    )
+    .toLowerCase()
+    .trim();
+
+
+  let type =
+    'unknown';
+
+
+  if(status === 'present')
+    type = 'present';
+
+
+  if(
+    status === 'time out' ||
+    status === 'timeout'
+  )
+    type = 'timeout';
+
+
+  const scan = {
+
+    type,
+
+    name:
+      student
+        ? student.full_name
+        : 'Unknown Card',
+
+    uid:
+      row.scanned_rfid,
+
+    studentId:
+      student
+        ? student.student_id_number
+        : '',
+
+    section:
+      student
+        ? student.course_section
+        : '',
+
+    timeLabel:
+      formatTime(
+        row.timestamp
+      )
+
+  };
+
+
+  state.scanHistory.unshift(
+    scan
+  );
+
+
+  if(
+    state.scanHistory.length >
+    MAX_HISTORY
+  ){
+
+    state.scanHistory.pop();
+
+  }
+
+
+  renderScanHero(
+    scan
+  );
+
+  renderHistory();
+
+}
+
+
+/* ============================================================
+   SCAN HERO
+   ============================================================ */
+
+function renderScanHero(
+  scan
+){
+
+  if(!scan){
+
+    el.scanContent.innerHTML = `
+
+      <div class="scan-idle">
+
+        <div
+          class="scan-idle-icon"
+          style="font-size:38px"
+        >
+          💳
+        </div>
+
+        <div class="scan-idle-text">
+          Waiting for card tap...
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  let pillClass =
+    'pill-unknown';
+
+  let text =
+    'Not Registered';
+
+
+  if(scan.type === 'present'){
+
+    pillClass =
+      'pill-present';
+
+    text =
+      'Present - Time In';
+
+  }
+
+
+  if(scan.type === 'timeout'){
+
+    pillClass =
+      'pill-timeout';
+
+    text =
+      'Time Out';
+
+  }
+
+
+  el.scanContent.innerHTML = `
+
+    <div>
+
+      <div class="scan-name">
+        ${esc(scan.name)}
+      </div>
+
+      <div class="scan-meta">
+
+        ${
+          scan.type === 'unknown'
+            ? `UID: ${esc(scan.uid)}`
+            : `${esc(scan.studentId)} • ${esc(scan.section || 'No section')}`
+        }
+
+      </div>
+
+      <span class="scan-pill ${pillClass}">
+        ${text}
+      </span>
+
+      <div class="scan-time-label">
+        ${esc(scan.timeLabel)}
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+function renderHistory(){
+
+  if(!state.scanHistory.length){
+
+    el.historyList.innerHTML =
+      `<div class="history-empty">
+        No scans this session
+      </div>`;
+
+    return;
+
+  }
+
+
+  el.historyList.innerHTML =
+    state.scanHistory
+      .map(scan => {
+
+        const dot =
+          scan.type === 'present'
+            ? 'dot-present'
+            : scan.type === 'timeout'
+              ? 'dot-timeout'
+              : 'dot-unknown';
+
+
+        const badge =
+          scan.type === 'present'
+            ? 'IN'
+            : scan.type === 'timeout'
+              ? 'OUT'
+              : 'N/A';
+
+
+        const badgeClass =
+          scan.type === 'present'
+            ? 'hb-present'
+            : scan.type === 'timeout'
+              ? 'hb-timeout'
+              : 'hb-unknown';
+
+
+        return `
+
+          <div class="history-item">
+
+            <div class="
+              history-dot
+              ${dot}
+            "></div>
+
+            <div class="history-info">
+
+              <div class="history-name">
+                ${esc(scan.name)}
+              </div>
+
+              <div class="history-time">
+                ${esc(scan.timeLabel)}
+              </div>
+
+            </div>
+
+            <div class="
+              history-badge
+              ${badgeClass}
+            ">
+              ${badge}
+            </div>
+
+          </div>
+
+        `;
+
+      })
+      .join('');
+
+}
+
+
+/* ============================================================
+   FILTER
+   ============================================================ */
+
+function setFilter(
+  filter
+){
+
+  state.filter =
+    filter;
+
+
+  document
+    .querySelectorAll('.chip')
+    .forEach(button => {
+
+      button.classList.toggle(
+        'active',
+        button.dataset.filter ===
+        filter
+      );
+
+    });
+
+
+  renderGrid();
+
+}
+
+
+/* ============================================================
+   REFRESH
+   ============================================================ */
+
+async function refresh(){
+
+  el.refreshBtn.disabled =
+    true;
+
+  el.refreshBtn.textContent =
+    'Loading...';
+
+
+  await loadStudents();
+
+  await loadAttendance(
+    state.attendanceDate ||
+    manilaDate()
+  );
+
+
+  el.refreshBtn.disabled =
+    false;
+
+  el.refreshBtn.textContent =
+    '↻ Refresh';
+
+}
+
+
+/* ============================================================
+   PDF REPORT
+   ============================================================ */
+
+async function printPDF(){
+
+  const date =
+    el.printDate.value;
+
+
+  if(!date){
+
+    toast(
+      'Please select a date.',
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  el.printBtn.disabled =
+    true;
+
+  el.printBtn.textContent =
+    'Creating PDF...';
+
+
+  try{
+
+    const start =
+      `${date}T00:00:00+08:00`;
+
+    const end =
+      `${date}T23:59:59+08:00`;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from('attendance_records')
+        .select('*')
+        .gte('timestamp',start)
+        .lte('timestamp',end)
+        .order(
+          'timestamp',
+          {
+            ascending:true
+          }
+        );
+
+
+    if(error)
+      throw error;
+
+
+    const attendance = {};
+
+
+    (data || []).forEach(row => {
+
+      const uid =
+        row.scanned_rfid;
+
+      const status =
+        String(
+          row.status || ''
+        )
+        .toLowerCase()
+        .trim();
+
+
+      if(!attendance[uid]){
+
+        attendance[uid] = {
+
+          inTime:null,
+
+          outTime:null
+
+        };
+
+      }
+
+
+      if(
+        status === 'present'
+        &&
+        !attendance[uid].inTime
+      ){
+
+        attendance[uid].inTime =
+          row.timestamp;
+
+      }
+
+
+      if(
+        status === 'time out'
+        ||
+        status === 'timeout'
+      ){
+
+        attendance[uid].outTime =
+          row.timestamp;
+
+      }
+
+    });
+
+
+    let present =
+      0;
+
+
+    let absent =
+      0;
+
+
+    const rows =
+      state.students.map(
+        (student,index) => {
+
+          const att =
+            attendance[
+              student.rfid_uid
+            ];
+
+
+          if(att)
+            present++;
+          else
+            absent++;
+
+
+          return [
+
+            index + 1,
+
+            student.student_id_number ||
+              '--',
+
+            student.full_name ||
+              '--',
+
+            student.course_section ||
+              '--',
+
+            !att
+              ? 'Absent'
+              : att.outTime
+                ? 'Timed Out'
+                : 'Present',
+
+            att && att.inTime
+              ? formatTime(
+                  att.inTime
+                )
+              : '--',
+
+            att && att.outTime
+              ? formatTime(
+                  att.outTime
+                )
+              : '--'
+
+          ];
+
+        }
+      );
+
+
+    if(
+      !window.jspdf ||
+      !window.jspdf.jsPDF
+    ){
+
+      throw new Error(
+        'PDF library did not load.'
+      );
+
+    }
+
+
+    const {
+      jsPDF
+    } =
+      window.jspdf;
+
+
+    const doc =
+      new jsPDF({
+        orientation:'landscape',
+        unit:'mm',
+        format:'a4'
+      });
+
+
+    const selectedDate =
+      new Date(
+        `${date}T12:00:00+08:00`
+      );
+
+
+    const dateLabel =
+      formatDate(
+        selectedDate
+      );
+
+
+    doc.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    doc.setFontSize(
+      20
+    );
+
+    doc.setTextColor(
+      142,
+      0,
+      0
+    );
+
+    doc.text(
+      'GLOBAL ACADEMY',
+      14,
+      16
+    );
+
+
+    doc.setFontSize(
+      10
+    );
+
+    doc.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    doc.setTextColor(
+      80,
+      80,
+      80
+    );
+
+    doc.text(
+      'SMART RFID ATTENDANCE REPORT',
+      14,
+      22
+    );
+
+
+    doc.text(
+      dateLabel,
+      14,
+      28
+    );
+
+
+    const rate =
+      state.students.length
+        ? Math.round(
+            present /
+            state.students.length *
+            100
+          )
+        : 0;
+
+
+    doc.text(
+      `Total: ${state.students.length}    Present: ${present}    Absent: ${absent}    Rate: ${rate}%`,
+      14,
+      35
+    );
+
+
+    doc.autoTable({
+
+      startY:40,
+
+      head:[[
+        'No.',
+        'Student ID',
+        'Name',
+        'Course / Section',
+        'Status',
+        'Time In',
+        'Time Out'
+      ]],
+
+      body:rows,
+
+      theme:'grid',
+
+      styles:{
+        fontSize:8,
+        cellPadding:2.2
+      },
+
+      headStyles:{
+        fillColor:[142,0,0],
+        textColor:[255,255,255],
+        fontStyle:'bold'
+      },
+
+      alternateRowStyles:{
+        fillColor:[253,245,245]
+      },
+
+      didParseCell:function(cell){
+
+        if(
+          cell.section === 'body' &&
+          cell.column.index === 4
+        ){
+
+          if(
+            cell.cell.raw ===
+            'Present'
+          ){
+
+            cell.cell.styles.textColor =
+              [26,122,74];
+
+          }
+
+          if(
+            cell.cell.raw ===
+            'Absent'
+          ){
+
+            cell.cell.styles.textColor =
+              [130,130,130];
+
+          }
+
+          if(
+            cell.cell.raw ===
+            'Timed Out'
+          ){
+
+            cell.cell.styles.textColor =
+              [196,122,0];
+
+          }
+
+        }
+
+      }
+
+    });
+
+
+    const pageCount =
+      doc.internal.getNumberOfPages();
+
+
+    for(
+      let page = 1;
+      page <= pageCount;
+      page++
+    ){
+
+      doc.setPage(
+        page
+      );
+
+      doc.setFontSize(
+        7
+      );
+
+      doc.setTextColor(
+        130,
+        130,
+        130
+      );
+
+      doc.text(
+        'Generated by Smart RFID Attendance System',
+        14,
+        202
+      );
+
+      doc.text(
+        `Page ${page} of ${pageCount}`,
+        283,
+        202,
+        {
+          align:'right'
+        }
+      );
+
+    }
+
+
+    const filename =
+      `Global_Academy_Attendance_${date}.pdf`;
+
+
+    doc.save(
+      filename
+    );
+
+
+    toast(
+      'PDF created successfully.',
+      'success'
+    );
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    toast(
+      'Failed to create PDF: ' +
+      error.message,
+      'error'
+    );
+
+  }
+
+
+  el.printBtn.disabled =
+    false;
+
+  el.printBtn.textContent =
+    '🖨 Print PDF';
+
+}
+
+
+/* ============================================================
+   INITIALIZE APP
+   ============================================================ */
+
+let initialized =
+  false;
+
+
+async function initializeApp(){
+
+  if(initialized)
+    return;
+
+
+  initialized =
+    true;
+
+
+  el.printDate.value =
+    manilaDate();
+
+
+  updateClock();
+
+  setInterval(
+    updateClock,
+    1000
+  );
+
+
+  connectionStatus(
+    'connecting'
+  );
+
+
+  await loadStudents();
+
+  await loadAttendance(
+    manilaDate()
+  );
+
+
+  renderGrid();
+
+  renderHistory();
+
+  subscribeAttendance();
+
+}
+
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+
+el.loginBtn.addEventListener(
+  'click',
+  login
+);
+
+
+el.loginPassword.addEventListener(
+  'keydown',
+  event => {
+
+    if(event.key === 'Enter')
+      login();
+
+  }
+);
+
+
+el.logoutBtn.addEventListener(
+  'click',
+  logout
+);
+
+
+el.addStudentBtn.addEventListener(
+  'click',
+  openModal
+);
+
+
+el.modalCloseBtn.addEventListener(
+  'click',
+  closeModal
+);
+
+
+el.modalCancelBtn.addEventListener(
+  'click',
+  closeModal
+);
+
+
+el.modalOverlay.addEventListener(
+  'click',
+  event => {
+
+    if(
+      event.target ===
+      el.modalOverlay
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+el.modalSaveBtn.addEventListener(
+  'click',
+  saveStudent
+);
+
+
+el.scanUidBtn.addEventListener(
+  'click',
+  startRFIDScan
+);
+
+
+el.inpUid.addEventListener(
+  'input',
+  () => {
+
+    el.inpUid.value =
+      el.inpUid.value
+        .replace(
+          /[^0-9a-fA-F]/g,
+          ''
+        )
+        .toUpperCase();
+
+  }
+);
+
+
+el.searchInput.addEventListener(
+  'input',
+  event => {
+
+    state.searchQ =
+      event.target.value;
+
+    renderGrid();
+
+  }
+);
+
+
+document
+  .querySelectorAll('.chip')
+  .forEach(button => {
+
+    button.addEventListener(
+      'click',
+      () =>
+        setFilter(
+          button.dataset.filter
+        )
+    );
+
+  });
+
+
+el.refreshBtn.addEventListener(
+  'click',
+  refresh
+);
+
+
+el.printDate.addEventListener(
+  'change',
+  async () => {
+
+    await loadAttendance(
+      el.printDate.value
+    );
+
+  }
+);
+
+
+el.printBtn.addEventListener(
+  'click',
+  printPDF
+);
+
+
+/* ============================================================
+   CLOSE MODAL WITH ESC
+   ============================================================ */
+
+document.addEventListener(
+  'keydown',
+  event => {
+
+    if(
+      event.key === 'Escape' &&
+      el.modalOverlay.classList.contains(
+        'open'
+      )
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   AUTH STATE
+   ============================================================ */
+
+sb.auth.onAuthStateChange(
+  (event,session) => {
+
+    if(session){
+
+      showApp();
+
+    }
+
+    else{
+
+      initialized =
+        false;
+
+      showLogin();
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   START
+   ============================================================ */
+
+checkAuth();
+
 
 })();
+
 </script>
+
 </body>
 </html>
