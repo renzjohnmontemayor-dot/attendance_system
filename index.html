@@ -904,6 +904,7 @@ button{
   color:var(--text-muted);
 
   font-weight:bold;
+
 }
 
 .time-block-val{
@@ -1688,6 +1689,7 @@ button{
   opacity:.6;
 
   pointer-events:none;
+
 }
 
 </style>
@@ -2264,6 +2266,8 @@ const sb =
 /* ============================================================
    STATE
    ============================================================ */
+
+let initialized = false;
 
 const state = {
 
@@ -4279,7 +4283,7 @@ async function printPDF(){
 
     const logo =
       document.querySelector(
-        '.header-logo'
+        '.header-logo-wrap img'
       );
 
 
@@ -4293,7 +4297,7 @@ async function printPDF(){
 
         doc.addImage(
           logo,
-          'PNG',
+          'JPEG',
           14,
           5,
           22,
