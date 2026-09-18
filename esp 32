@@ -1,0 +1,2327 @@
+/*
+ ============================================================
+ GLOBAL ACADEMY
+ SMART RFID ATTENDANCE SYSTEM
+
+ ESP32 + RC522 + LCD + BUZZER + LED + SUPABASE
+
+ WIFI:
+ SSID:     12345
+ PASSWORD: 00000000
+
+ RFID:
+ SDA/SS = GPIO 5
+ SCK    = GPIO 18
+ MOSI   = GPIO 23
+ MISO   = GPIO 19
+ RST    = GPIO 27
+
+ LCD:
+ SDA = GPIO 21
+ SCL = GPIO 22
+ ADDRESS = 0x27
+
+ BUZZER:
+ GPIO 25
+
+ GREEN LED:
+ GPIO 16
+
+ RED LED:
+ GPIO 17
+
+ SUPABASE:
+ https://tlmlyymsxihzbmksinfn.supabase.co
+
+ ATTENDANCE:
+ 1st scan = Present / Time In
+ 2nd scan = Time Out
+ 3rd scan = Already Done
+
+ SESSION:
+ 6:00 PM -> next day 5:59 PM
+ PHILIPPINES TIME = UTC+8
+ ============================================================
+*/
+
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <time.h>
+#include <ctype.h>
+
+
+// ============================================================
+// WIFI
+// ============================================================
+
+const char* WIFI_SSID = "1234567";
+const char* WIFI_PASSWORD = "123456789";
+
+
+// ============================================================
+// SUPABASE
+// ============================================================
+
+const char* SUPABASE_URL =
+    "https://tlmlyymsxihzbmksinfn.supabase.co";
+
+const char* SUPABASE_KEY =
+    "sb_publishable_FWKNh4QI-Iw8sT-IzBcxcg_8epcmbmv";
+
+
+// ============================================================
+// RFID
+// ============================================================
+
+#define RFID_SS   5
+#define RFID_RST  27
+
+MFRC522 rfid(
+    RFID_SS,
+    RFID_RST
+);
+
+
+// ============================================================
+// LCD
+// ============================================================
+
+LiquidCrystal_I2C lcd(
+    0x27,
+    16,
+    2
+);
+
+
+// ============================================================
+// OUTPUTS
+// ============================================================
+
+#define BUZZER_PIN 25
+#define GREEN_LED  16
+#define RED_LED    17
+
+
+// ============================================================
+// TIMING
+// ============================================================
+
+unsigned long lastScanTime = 0;
+
+const unsigned long SCAN_COOLDOWN = 2500;
+
+
+// ============================================================
+// FORWARD DECLARATIONS
+// ============================================================
+
+void showReady();
+void connectWiFi();
+void setupTime();
+
+String getUID();
+String normalizeUID(String uid);
+String urlEncode(String text);
+
+String getCurrentTimestamp();
+String getSessionStartTimestamp();
+
+bool findStudent(
+    String uid,
+    String &studentUUID,
+    String &studentName,
+    String &studentNumber,
+    String &course
+);
+
+bool getAttendanceForStudent(
+    String studentUUID,
+    bool &hasTimeIn,
+    bool &hasTimeOut
+);
+
+bool insertAttendance(
+    String studentUUID,
+    String uid,
+    String status
+);
+
+bool insertUnregisteredScan(
+    String uid
+);
+
+void processCard(
+    String uid
+);
+
+
+// ============================================================
+// DATE TO UNIX TIME
+//
+// ESP32-compatible replacement for timegm()
+//
+// Converts a UTC calendar date/time into Unix timestamp.
+// ============================================================
+
+time_t dateTimeToUnix(
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second
+) {
+
+    // --------------------------------------------------------
+    // Normalize January/February
+    // --------------------------------------------------------
+
+    if (month <= 2) {
+        year--;
+        month += 12;
+    }
+
+
+    // --------------------------------------------------------
+    // Days from 1970-01-01
+    // --------------------------------------------------------
+
+    long days =
+        365L * (year - 1970)
+        +
+        (year - 1969) / 4
+        -
+        (year - 1901) / 100
+        +
+        (year - 1901) / 400;
+
+
+    static const int daysBeforeMonth[] = {
+        0,   // January
+        31,  // February
+        59,  // March
+        90,  // April
+        120, // May
+        151, // June
+        181, // July
+        212, // August
+        243, // September
+        273, // October
+        304, // November
+        334  // December
+    };
+
+
+    // --------------------------------------------------------
+    // Since the month was converted above:
+    //
+    // month 3 = March
+    // month 14 = February
+    //
+    // Use normal month calculation.
+    // --------------------------------------------------------
+
+    int normalYear = year;
+    int normalMonth = month;
+
+    if (normalMonth > 12) {
+        normalMonth -= 12;
+        normalYear++;
+    }
+
+
+    int monthIndex =
+        normalMonth - 1;
+
+
+    long dayOfYear =
+        daysBeforeMonth[monthIndex];
+
+
+    // Leap year adjustment
+    if (
+        normalMonth > 2
+        &&
+        (
+            (normalYear % 4 == 0)
+            &&
+            (
+                normalYear % 100 != 0
+                ||
+                normalYear % 400 == 0
+            )
+        )
+    ) {
+        dayOfYear++;
+    }
+
+
+    days +=
+        dayOfYear
+        +
+        (day - 1);
+
+
+    time_t result =
+        (time_t)days * 86400;
+
+
+    result +=
+        (time_t)hour * 3600;
+
+    result +=
+        (time_t)minute * 60;
+
+    result +=
+        second;
+
+
+    return result;
+}
+
+
+// ============================================================
+// SETUP
+// ============================================================
+
+void setup() {
+
+    Serial.begin(115200);
+
+    delay(500);
+
+
+    // --------------------------------------------------------
+    // OUTPUTS
+    // --------------------------------------------------------
+
+    pinMode(
+        BUZZER_PIN,
+        OUTPUT
+    );
+
+    pinMode(
+        GREEN_LED,
+        OUTPUT
+    );
+
+    pinMode(
+        RED_LED,
+        OUTPUT
+    );
+
+
+    digitalWrite(
+        BUZZER_PIN,
+        LOW
+    );
+
+    digitalWrite(
+        GREEN_LED,
+        LOW
+    );
+
+    digitalWrite(
+        RED_LED,
+        LOW
+    );
+
+
+    // --------------------------------------------------------
+    // LCD
+    // --------------------------------------------------------
+
+    Wire.begin(
+        21,
+        22
+    );
+
+    lcd.init();
+
+    lcd.backlight();
+
+    lcd.clear();
+
+    lcd.setCursor(
+        0,
+        0
+    );
+
+    lcd.print(
+        "GLOBAL ACADEMY"
+    );
+
+    lcd.setCursor(
+        0,
+        1
+    );
+
+    lcd.print(
+        "Starting..."
+    );
+
+
+    // --------------------------------------------------------
+    // RFID
+    // --------------------------------------------------------
+
+    SPI.begin(
+        18,
+        19,
+        23,
+        5
+    );
+
+    rfid.PCD_Init();
+
+    delay(300);
+
+
+    // --------------------------------------------------------
+    // WIFI
+    // --------------------------------------------------------
+
+    connectWiFi();
+
+
+    // --------------------------------------------------------
+    // TIME
+    // --------------------------------------------------------
+
+    setupTime();
+
+
+    // --------------------------------------------------------
+    // READY
+    // --------------------------------------------------------
+
+    showReady();
+
+
+    Serial.println();
+    Serial.println(
+        "================================"
+    );
+
+    Serial.println(
+        "GLOBAL ACADEMY RFID READY"
+    );
+
+    Serial.println(
+        "================================"
+    );
+
+}
+
+
+// ============================================================
+// LOOP
+// ============================================================
+
+void loop() {
+
+    // --------------------------------------------------------
+    // RECONNECT WIFI
+    // --------------------------------------------------------
+
+    if (
+        WiFi.status()
+        !=
+        WL_CONNECTED
+    ) {
+
+        connectWiFi();
+
+        delay(100);
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // CHECK RFID
+    // --------------------------------------------------------
+
+    if (
+        !rfid.PICC_IsNewCardPresent()
+    ) {
+
+        delay(20);
+
+        return;
+    }
+
+
+    if (
+        !rfid.PICC_ReadCardSerial()
+    ) {
+
+        delay(20);
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // SCAN COOLDOWN
+    // --------------------------------------------------------
+
+    if (
+        millis()
+        -
+        lastScanTime
+        <
+        SCAN_COOLDOWN
+    ) {
+
+        rfid.PICC_HaltA();
+
+        rfid.PCD_StopCrypto1();
+
+        return;
+    }
+
+
+    lastScanTime =
+        millis();
+
+
+    // --------------------------------------------------------
+    // GET UID
+    // --------------------------------------------------------
+
+    String uid =
+        getUID();
+
+
+    Serial.print(
+        "RFID: "
+    );
+
+    Serial.println(
+        uid
+    );
+
+
+    // --------------------------------------------------------
+    // PROCESS
+    // --------------------------------------------------------
+
+    processCard(
+        uid
+    );
+
+
+    // --------------------------------------------------------
+    // STOP RFID
+    // --------------------------------------------------------
+
+    rfid.PICC_HaltA();
+
+    rfid.PCD_StopCrypto1();
+
+
+    delay(100);
+}
+
+
+// ============================================================
+// WIFI
+// ============================================================
+
+void connectWiFi() {
+
+    lcd.clear();
+
+    lcd.setCursor(
+        0,
+        0
+    );
+
+    lcd.print(
+        "Connecting WiFi"
+    );
+
+
+    Serial.println(
+        "Connecting WiFi..."
+    );
+
+
+    WiFi.mode(
+        WIFI_STA
+    );
+
+    WiFi.begin(
+        WIFI_SSID,
+        WIFI_PASSWORD
+    );
+
+
+    int attempts = 0;
+
+
+    while (
+        WiFi.status()
+        !=
+        WL_CONNECTED
+        &&
+        attempts < 40
+    ) {
+
+        delay(250);
+
+        Serial.print(
+            "."
+        );
+
+        attempts++;
+    }
+
+
+    if (
+        WiFi.status()
+        ==
+        WL_CONNECTED
+    ) {
+
+        Serial.println();
+
+        Serial.println(
+            "WiFi connected"
+        );
+
+        Serial.print(
+            "IP: "
+        );
+
+        Serial.println(
+            WiFi.localIP()
+        );
+
+
+        lcd.clear();
+
+        lcd.setCursor(
+            0,
+            0
+        );
+
+        lcd.print(
+            "WiFi Connected"
+        );
+
+        lcd.setCursor(
+            0,
+            1
+        );
+
+        lcd.print(
+            WiFi.localIP()
+        );
+
+
+        delay(1500);
+
+    }
+
+    else {
+
+        Serial.println();
+
+        Serial.println(
+            "WiFi FAILED"
+        );
+
+
+        lcd.clear();
+
+        lcd.setCursor(
+            0,
+            0
+        );
+
+        lcd.print(
+            "WiFi Failed"
+        );
+
+        lcd.setCursor(
+            0,
+            1
+        );
+
+        lcd.print(
+            "Check WiFi"
+        );
+
+
+        delay(1500);
+    }
+}
+
+
+// ============================================================
+// NTP TIME
+// PHILIPPINES = UTC+8
+// ============================================================
+
+void setupTime() {
+
+    configTime(
+        8 * 3600,
+        0,
+        "pool.ntp.org",
+        "time.nist.gov",
+        "time.google.com"
+    );
+
+
+    Serial.println(
+        "Synchronizing time..."
+    );
+
+
+    time_t now =
+        time(nullptr);
+
+
+    int attempts = 0;
+
+
+    while (
+        now < 100000
+        &&
+        attempts < 30
+    ) {
+
+        delay(500);
+
+        now =
+            time(nullptr);
+
+        attempts++;
+    }
+
+
+    if (now >= 100000) {
+
+        Serial.println(
+            "Time synchronized"
+        );
+
+    }
+    else {
+
+        Serial.println(
+            "Time synchronization FAILED"
+        );
+    }
+}
+
+
+// ============================================================
+// LCD READY
+// ============================================================
+
+void showReady() {
+
+    lcd.clear();
+
+    lcd.setCursor(
+        0,
+        0
+    );
+
+    lcd.print(
+        "SCAN RFID CARD"
+    );
+
+    lcd.setCursor(
+        0,
+        1
+    );
+
+    lcd.print(
+        "Ready..."
+    );
+}
+
+
+// ============================================================
+// GET RFID UID
+// ============================================================
+
+String getUID() {
+
+    String uid = "";
+
+
+    for (
+        byte i = 0;
+        i < rfid.uid.size;
+        i++
+    ) {
+
+        if (
+            rfid.uid.uidByte[i]
+            <
+            0x10
+        ) {
+
+            uid += "0";
+        }
+
+
+        uid += String(
+            rfid.uid.uidByte[i],
+            HEX
+        );
+    }
+
+
+    uid.toUpperCase();
+
+
+    return uid;
+}
+
+
+// ============================================================
+// NORMALIZE UID
+// ============================================================
+
+String normalizeUID(
+    String uid
+) {
+
+    String result = "";
+
+
+    for (
+        unsigned int i = 0;
+        i < uid.length();
+        i++
+    ) {
+
+        char c =
+            uid.charAt(i);
+
+
+        if (
+            isxdigit(
+                (unsigned char)c
+            )
+        ) {
+
+            result +=
+                (char)toupper(
+                    (unsigned char)c
+                );
+        }
+    }
+
+
+    return result;
+}
+
+
+// ============================================================
+// URL ENCODE
+// ============================================================
+
+String urlEncode(
+    String text
+) {
+
+    String encoded = "";
+
+
+    const char* hex =
+        "0123456789ABCDEF";
+
+
+    for (
+        unsigned int i = 0;
+        i < text.length();
+        i++
+    ) {
+
+        char c =
+            text.charAt(i);
+
+
+        if (
+            isalnum(
+                (unsigned char)c
+            )
+            ||
+            c == '-'
+            ||
+            c == '_'
+            ||
+            c == '.'
+        ) {
+
+            encoded += c;
+
+        }
+
+        else {
+
+            encoded += '%';
+
+            encoded +=
+                hex[
+                    (c >> 4)
+                    &
+                    0x0F
+                ];
+
+            encoded +=
+                hex[
+                    c
+                    &
+                    0x0F
+                ];
+        }
+    }
+
+
+    return encoded;
+}
+
+
+// ============================================================
+// CURRENT TIMESTAMP
+//
+// Returns UTC timestamp for Supabase.
+// Example:
+// 2026-08-18T16:30:00Z
+//
+// Philippines local time is UTC+8.
+// ============================================================
+
+String getCurrentTimestamp() {
+
+    time_t now =
+        time(nullptr);
+
+
+    struct tm timeinfo;
+
+
+    gmtime_r(
+        &now,
+        &timeinfo
+    );
+
+
+    char buffer[30];
+
+
+    strftime(
+        buffer,
+        sizeof(buffer),
+        "%Y-%m-%dT%H:%M:%SZ",
+        &timeinfo
+    );
+
+
+    return String(
+        buffer
+    );
+}
+
+
+// ============================================================
+// SESSION START
+//
+// Attendance session:
+//
+// 6:00 PM -> next day 5:59 PM
+//
+// Philippines = UTC+8
+//
+// IMPORTANT:
+// This version DOES NOT use timegm().
+// ============================================================
+
+String getSessionStartTimestamp() {
+
+    time_t now =
+        time(nullptr);
+
+
+    // --------------------------------------------------------
+    // Convert current UTC timestamp to Philippine time
+    // --------------------------------------------------------
+
+    time_t philippineNow =
+        now + (8 * 3600);
+
+
+    struct tm ph;
+
+
+    gmtime_r(
+        &philippineNow,
+        &ph
+    );
+
+
+    // --------------------------------------------------------
+    // Current Philippine hour
+    // --------------------------------------------------------
+
+    int currentHour =
+        ph.tm_hour;
+
+
+    // --------------------------------------------------------
+    // Session starts at 6:00 PM
+    // --------------------------------------------------------
+
+    ph.tm_hour = 18;
+    ph.tm_min = 0;
+    ph.tm_sec = 0;
+
+
+    // --------------------------------------------------------
+    // If current Philippine time is before 6 PM,
+    // the session started yesterday.
+    // --------------------------------------------------------
+
+    if (
+        currentHour < 18
+    ) {
+
+        ph.tm_mday--;
+
+        // ----------------------------------------------------
+        // Handle month/year boundary safely.
+        //
+        // Instead of depending on mktime(), we calculate
+        // the previous calendar date manually.
+        // ----------------------------------------------------
+
+        if (
+            ph.tm_mday < 1
+        ) {
+
+            ph.tm_mon--;
+
+
+            if (
+                ph.tm_mon < 0
+            ) {
+
+                ph.tm_mon = 11;
+
+                ph.tm_year--;
+            }
+
+
+            int year =
+                ph.tm_year + 1900;
+
+
+            int month =
+                ph.tm_mon + 1;
+
+
+            int daysInMonth = 31;
+
+
+            if (
+                month == 4
+                ||
+                month == 6
+                ||
+                month == 9
+                ||
+                month == 11
+            ) {
+
+                daysInMonth = 30;
+
+            }
+
+            else if (
+                month == 2
+            ) {
+
+                bool leap =
+                    (
+                        year % 4 == 0
+                        &&
+                        (
+                            year % 100 != 0
+                            ||
+                            year % 400 == 0
+                        )
+                    );
+
+                daysInMonth =
+                    leap ? 29 : 28;
+            }
+
+
+            ph.tm_mday =
+                daysInMonth;
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Convert Philippine calendar date to Unix timestamp.
+    //
+    // We first create a "pseudo UTC" timestamp representing
+    // the Philippine date/time as if it were UTC.
+    // Then subtract 8 hours to get the real UTC timestamp.
+    // --------------------------------------------------------
+
+    int year =
+        ph.tm_year + 1900;
+
+
+    int month =
+        ph.tm_mon + 1;
+
+
+    int day =
+        ph.tm_mday;
+
+
+    time_t pseudoUTC =
+        dateTimeToUnix(
+            year,
+            month,
+            day,
+            18,
+            0,
+            0
+        );
+
+
+    time_t sessionUTC =
+        pseudoUTC
+        -
+        (8 * 3600);
+
+
+    // --------------------------------------------------------
+    // Format UTC timestamp
+    // --------------------------------------------------------
+
+    struct tm sessionTM;
+
+
+    gmtime_r(
+        &sessionUTC,
+        &sessionTM
+    );
+
+
+    char buffer[30];
+
+
+    strftime(
+        buffer,
+        sizeof(buffer),
+        "%Y-%m-%dT%H:%M:%SZ",
+        &sessionTM
+    );
+
+
+    Serial.print(
+        "Session start UTC: "
+    );
+
+    Serial.println(
+        buffer
+    );
+
+
+    return String(
+        buffer
+    );
+}
+
+
+// ============================================================
+// FIND STUDENT BY RFID
+// ============================================================
+
+bool findStudent(
+    String uid,
+    String &studentUUID,
+    String &studentName,
+    String &studentNumber,
+    String &course
+) {
+
+    WiFiClientSecure client;
+
+    client.setInsecure();
+
+
+    HTTPClient http;
+
+
+    String url =
+        String(SUPABASE_URL)
+        +
+        "/rest/v1/students"
+        +
+        "?rfid_uid=eq."
+        +
+        urlEncode(uid)
+        +
+        "&select=id,student_id_number,full_name,course_section"
+        +
+        "&limit=1";
+
+
+    Serial.println(
+        "Student lookup:"
+    );
+
+    Serial.println(
+        url
+    );
+
+
+    if (
+        !http.begin(
+            client,
+            url
+        )
+    ) {
+
+        Serial.println(
+            "HTTP begin failed"
+        );
+
+        return false;
+    }
+
+
+    http.addHeader(
+        "apikey",
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Authorization",
+        String("Bearer ")
+        +
+        SUPABASE_KEY
+    );
+
+
+    http.setTimeout(
+        5000
+    );
+
+
+    int code =
+        http.GET();
+
+
+    if (
+        code != 200
+    ) {
+
+        Serial.print(
+            "Student GET error: "
+        );
+
+        Serial.println(
+            code
+        );
+
+        http.end();
+
+        return false;
+    }
+
+
+    String response =
+        http.getString();
+
+
+    http.end();
+
+
+    Serial.print(
+        "Student response: "
+    );
+
+    Serial.println(
+        response
+    );
+
+
+    DynamicJsonDocument doc(
+        2048
+    );
+
+
+    DeserializationError error =
+        deserializeJson(
+            doc,
+            response
+        );
+
+
+    if (
+        error
+    ) {
+
+        Serial.print(
+            "JSON error: "
+        );
+
+        Serial.println(
+            error.c_str()
+        );
+
+        return false;
+    }
+
+
+    JsonArray array =
+        doc.as<JsonArray>();
+
+
+    if (
+        array.size() == 0
+    ) {
+
+        return false;
+    }
+
+
+    JsonObject student =
+        array[0];
+
+
+    studentUUID =
+        student["id"]
+        |
+        "";
+
+
+    studentName =
+        student["full_name"]
+        |
+        "";
+
+
+    studentNumber =
+        student["student_id_number"]
+        |
+        "";
+
+
+    course =
+        student["course_section"]
+        |
+        "";
+
+
+    return (
+        studentUUID.length()
+        >
+        0
+    );
+}
+
+
+// ============================================================
+// CHECK SESSION ATTENDANCE
+// ============================================================
+
+bool getAttendanceForStudent(
+    String studentUUID,
+    bool &hasTimeIn,
+    bool &hasTimeOut
+) {
+
+    hasTimeIn = false;
+
+    hasTimeOut = false;
+
+
+    WiFiClientSecure client;
+
+    client.setInsecure();
+
+
+    HTTPClient http;
+
+
+    String sessionStart =
+        getSessionStartTimestamp();
+
+
+    String url =
+        String(SUPABASE_URL)
+        +
+        "/rest/v1/attendance_records"
+        +
+        "?student_id=eq."
+        +
+        urlEncode(studentUUID)
+        +
+        "&timestamp=gte."
+        +
+        urlEncode(sessionStart)
+        +
+        "&select=status,timestamp"
+        +
+        "&order=timestamp.asc";
+
+
+    Serial.println(
+        "Attendance lookup:"
+    );
+
+    Serial.println(
+        url
+    );
+
+
+    if (
+        !http.begin(
+            client,
+            url
+        )
+    ) {
+
+        Serial.println(
+            "Attendance HTTP begin failed"
+        );
+
+        return false;
+    }
+
+
+    http.addHeader(
+        "apikey",
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Authorization",
+        String("Bearer ")
+        +
+        SUPABASE_KEY
+    );
+
+
+    http.setTimeout(
+        5000
+    );
+
+
+    int code =
+        http.GET();
+
+
+    if (
+        code != 200
+    ) {
+
+        Serial.print(
+            "Attendance GET error: "
+        );
+
+        Serial.println(
+            code
+        );
+
+        http.end();
+
+        return false;
+    }
+
+
+    String response =
+        http.getString();
+
+
+    http.end();
+
+
+    Serial.print(
+        "Attendance response: "
+    );
+
+    Serial.println(
+        response
+    );
+
+
+    DynamicJsonDocument doc(
+        4096
+    );
+
+
+    DeserializationError error =
+        deserializeJson(
+            doc,
+            response
+        );
+
+
+    if (
+        error
+    ) {
+
+        Serial.print(
+            "Attendance JSON error: "
+        );
+
+        Serial.println(
+            error.c_str()
+        );
+
+        return false;
+    }
+
+
+    JsonArray rows =
+        doc.as<JsonArray>();
+
+
+    for (
+        JsonObject row :
+        rows
+    ) {
+
+        String status =
+            row["status"]
+            |
+            "";
+
+
+        status.trim();
+
+        status.toLowerCase();
+
+
+        if (
+            status ==
+            "present"
+        ) {
+
+            hasTimeIn = true;
+        }
+
+
+        if (
+            status ==
+            "time out"
+            ||
+            status ==
+            "timeout"
+        ) {
+
+            hasTimeOut = true;
+        }
+    }
+
+
+    return true;
+}
+
+
+// ============================================================
+// INSERT ATTENDANCE
+// ============================================================
+
+bool insertAttendance(
+    String studentUUID,
+    String uid,
+    String status
+) {
+
+    WiFiClientSecure client;
+
+    client.setInsecure();
+
+
+    HTTPClient http;
+
+
+    String url =
+        String(SUPABASE_URL)
+        +
+        "/rest/v1/attendance_records";
+
+
+    if (
+        !http.begin(
+            client,
+            url
+        )
+    ) {
+
+        Serial.println(
+            "Attendance POST begin failed"
+        );
+
+        return false;
+    }
+
+
+    http.addHeader(
+        "apikey",
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Authorization",
+        String("Bearer ")
+        +
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Content-Type",
+        "application/json"
+    );
+
+    http.addHeader(
+        "Prefer",
+        "return=minimal"
+    );
+
+
+    DynamicJsonDocument doc(
+        1024
+    );
+
+
+    doc["student_id"] =
+        studentUUID;
+
+
+    doc["scanned_rfid"] =
+        uid;
+
+
+    doc["status"] =
+        status;
+
+
+    doc["timestamp"] =
+        getCurrentTimestamp();
+
+
+    String body;
+
+
+    serializeJson(
+        doc,
+        body
+    );
+
+
+    Serial.print(
+        "Attendance body: "
+    );
+
+    Serial.println(
+        body
+    );
+
+
+    int code =
+        http.POST(
+            body
+        );
+
+
+    Serial.print(
+        "Attendance POST: "
+    );
+
+    Serial.println(
+        code
+    );
+
+
+    if (
+        code < 200
+        ||
+        code >= 300
+    ) {
+
+        Serial.print(
+            "POST response: "
+        );
+
+        Serial.println(
+            http.getString()
+        );
+    }
+
+
+    http.end();
+
+
+    return (
+        code >= 200
+        &&
+        code < 300
+    );
+}
+
+
+// ============================================================
+// INSERT UNKNOWN RFID
+// ============================================================
+
+bool insertUnregisteredScan(
+    String uid
+) {
+
+    WiFiClientSecure client;
+
+    client.setInsecure();
+
+
+    HTTPClient http;
+
+
+    String url =
+        String(SUPABASE_URL)
+        +
+        "/rest/v1/unregistered_scans";
+
+
+    if (
+        !http.begin(
+            client,
+            url
+        )
+    ) {
+
+        return false;
+    }
+
+
+    http.addHeader(
+        "apikey",
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Authorization",
+        String("Bearer ")
+        +
+        SUPABASE_KEY
+    );
+
+    http.addHeader(
+        "Content-Type",
+        "application/json"
+    );
+
+    http.addHeader(
+        "Prefer",
+        "return=minimal"
+    );
+
+
+    DynamicJsonDocument doc(
+        512
+    );
+
+
+    doc["rfid_uid"] =
+        uid;
+
+
+    String body;
+
+
+    serializeJson(
+        doc,
+        body
+    );
+
+
+    int code =
+        http.POST(
+            body
+        );
+
+
+    Serial.print(
+        "Unregistered POST: "
+    );
+
+    Serial.println(
+        code
+    );
+
+
+    http.end();
+
+
+    return (
+        code >= 200
+        &&
+        code < 300
+    );
+}
+
+
+// ============================================================
+// PROCESS RFID
+// ============================================================
+
+void processCard(
+    String uid
+) {
+
+    uid =
+        normalizeUID(
+            uid
+        );
+
+
+    // --------------------------------------------------------
+    // LCD VERIFYING
+    // --------------------------------------------------------
+
+    lcd.clear();
+
+    lcd.setCursor(
+        0,
+        0
+    );
+
+    lcd.print(
+        "VERIFYING..."
+    );
+
+    lcd.setCursor(
+        0,
+        1
+    );
+
+    lcd.print(
+        uid.substring(
+            0,
+            16
+        )
+    );
+
+
+    // --------------------------------------------------------
+    // STUDENT VARIABLES
+    // --------------------------------------------------------
+
+    String studentUUID;
+
+    String studentName;
+
+    String studentNumber;
+
+    String course;
+
+
+    // --------------------------------------------------------
+    // FIND STUDENT
+    // --------------------------------------------------------
+
+    bool found =
+        findStudent(
+            uid,
+            studentUUID,
+            studentName,
+            studentNumber,
+            course
+        );
+
+
+    // ========================================================
+    // NOT REGISTERED
+    // ========================================================
+
+    if (
+        !found
+    ) {
+
+        Serial.println(
+            "NOT REGISTERED"
+        );
+
+
+        insertUnregisteredScan(
+            uid
+        );
+
+
+        lcd.clear();
+
+        lcd.setCursor(
+            0,
+            0
+        );
+
+        lcd.print(
+            "NOT REGISTERED"
+        );
+
+        lcd.setCursor(
+            0,
+            1
+        );
+
+        lcd.print(
+            uid.substring(
+                0,
+                16
+            )
+        );
+
+
+        digitalWrite(
+            RED_LED,
+            HIGH
+        );
+
+
+        tone(
+            BUZZER_PIN,
+            700,
+            500
+        );
+
+
+        delay(1800);
+
+
+        digitalWrite(
+            RED_LED,
+            LOW
+        );
+
+
+        showReady();
+
+        return;
+    }
+
+
+    // ========================================================
+    // STUDENT FOUND
+    // ========================================================
+
+    Serial.println(
+        "Student found:"
+    );
+
+    Serial.println(
+        studentName
+    );
+
+
+    // --------------------------------------------------------
+    // CHECK ATTENDANCE
+    // --------------------------------------------------------
+
+    bool hasTimeIn = false;
+
+    bool hasTimeOut = false;
+
+
+    bool attendanceOK =
+        getAttendanceForStudent(
+            studentUUID,
+            hasTimeIn,
+            hasTimeOut
+        );
+
+
+    // ========================================================
+    // SERVER ERROR
+    // ========================================================
+
+    if (
+        !attendanceOK
+    ) {
+
+        lcd.clear();
+
+        lcd.setCursor(
+            0,
+            0
+        );
+
+        lcd.print(
+            "SERVER ERROR"
+        );
+
+        lcd.setCursor(
+            0,
+            1
+        );
+
+        lcd.print(
+            "Try again"
+        );
+
+
+        digitalWrite(
+            RED_LED,
+            HIGH
+        );
+
+
+        tone(
+            BUZZER_PIN,
+            500,
+            700
+        );
+
+
+        delay(1500);
+
+
+        digitalWrite(
+            RED_LED,
+            LOW
+        );
+
+
+        showReady();
+
+        return;
+    }
+
+
+    // ========================================================
+    // TIME IN
+    // ========================================================
+
+    if (
+        !hasTimeIn
+    ) {
+
+        Serial.println(
+            "TIME IN"
+        );
+
+
+        bool saved =
+            insertAttendance(
+                studentUUID,
+                uid,
+                "Present"
+            );
+
+
+        if (
+            saved
+        ) {
+
+            lcd.clear();
+
+            lcd.setCursor(
+                0,
+                0
+            );
+
+            lcd.print(
+                "TIME IN"
+            );
+
+            lcd.setCursor(
+                0,
+                1
+            );
+
+            lcd.print(
+                studentName.substring(
+                    0,
+                    16
+                )
+            );
+
+
+            digitalWrite(
+                GREEN_LED,
+                HIGH
+            );
+
+
+            tone(
+                BUZZER_PIN,
+                1800,
+                180
+            );
+
+
+            delay(100);
+
+
+            tone(
+                BUZZER_PIN,
+                2200,
+                180
+            );
+
+
+            delay(1800);
+
+
+            digitalWrite(
+                GREEN_LED,
+                LOW
+            );
+
+        }
+
+        else {
+
+            lcd.clear();
+
+            lcd.setCursor(
+                0,
+                0
+            );
+
+            lcd.print(
+                "SAVE FAILED"
+            );
+
+            lcd.setCursor(
+                0,
+                1
+            );
+
+            lcd.print(
+                "Try again"
+            );
+
+
+            digitalWrite(
+                RED_LED,
+                HIGH
+            );
+
+
+            tone(
+                BUZZER_PIN,
+                500,
+                600
+            );
+
+
+            delay(1500);
+
+
+            digitalWrite(
+                RED_LED,
+                LOW
+            );
+        }
+
+
+        showReady();
+
+        return;
+    }
+
+
+    // ========================================================
+    // TIME OUT
+    // ========================================================
+
+    if (
+        !hasTimeOut
+    ) {
+
+        Serial.println(
+            "TIME OUT"
+        );
+
+
+        bool saved =
+            insertAttendance(
+                studentUUID,
+                uid,
+                "Time Out"
+            );
+
+
+        if (
+            saved
+        ) {
+
+            lcd.clear();
+
+            lcd.setCursor(
+                0,
+                0
+            );
+
+            lcd.print(
+                "TIME OUT"
+            );
+
+            lcd.setCursor(
+                0,
+                1
+            );
+
+            lcd.print(
+                studentName.substring(
+                    0,
+                    16
+                )
+            );
+
+
+            digitalWrite(
+                GREEN_LED,
+                HIGH
+            );
+
+
+            tone(
+                BUZZER_PIN,
+                1800,
+                180
+            );
+
+
+            delay(100);
+
+
+            tone(
+                BUZZER_PIN,
+                1200,
+                180
+            );
+
+
+            delay(1800);
+
+
+            digitalWrite(
+                GREEN_LED,
+                LOW
+            );
+
+        }
+
+        else {
+
+            lcd.clear();
+
+            lcd.setCursor(
+                0,
+                0
+            );
+
+            lcd.print(
+                "SAVE FAILED"
+            );
+
+            lcd.setCursor(
+                0,
+                1
+            );
+
+            lcd.print(
+                "Try again"
+            );
+
+
+            digitalWrite(
+                RED_LED,
+                HIGH
+            );
+
+
+            tone(
+                BUZZER_PIN,
+                500,
+                600
+            );
+
+
+            delay(1500);
+
+
+            digitalWrite(
+                RED_LED,
+                LOW
+            );
+        }
+
+
+        showReady();
+
+        return;
+    }
+
+
+    // ========================================================
+    // ALREADY COMPLETE
+    // ========================================================
+
+    Serial.println(
+        "ATTENDANCE COMPLETE"
+    );
+
+
+    lcd.clear();
+
+    lcd.setCursor(
+        0,
+        0
+    );
+
+    lcd.print(
+        "ALREADY DONE"
+    );
+
+    lcd.setCursor(
+        0,
+        1
+    );
+
+    lcd.print(
+        studentName.substring(
+            0,
+            16
+        )
+    );
+
+
+    tone(
+        BUZZER_PIN,
+        900,
+        700
+    );
+
+
+    delay(1600);
+
+
+    showReady();
+}
